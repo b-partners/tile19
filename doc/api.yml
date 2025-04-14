@@ -1,0 +1,95 @@
+openapi: 3.0.3
+
+info:
+  title: tile-extender
+  description: API to extend an image
+  version: 'latest'
+
+servers:
+  - url: ""
+
+paths:
+  /extend:
+    put:
+      summary: Extend image from tiles
+      description: Calculates required tiles from coordinates and returns a base64 encoded image, with pixel offsets in response headers.
+      operationId: extendImage
+      tags:
+        - Extender
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TileExtenderRequestBody'
+      responses:
+        '200':
+          description: Image successfully generated
+          headers:
+            x_offset:
+              description: X offset in pixels (floating point)
+              schema:
+                type: string
+            y_offset:
+              description: Y offset in pixels (floating point)
+              schema:
+                type: string
+            pointer_x:
+              description: pointer_x coordinates
+              schema:
+                type: string
+            pointer_y:
+              description: pointer_y coordinates
+              schema:
+                type: string
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: base64
+                description: Base64-encoded image
+
+components:
+  schemas:
+    TileExtenderRequestBody:
+      type: object
+      required:
+        - x
+        - y
+        - z
+        - server
+        - layer
+        - shiftNb
+        - isCropped
+        - latitude
+        - longitude
+      properties:
+        x:
+          type: integer
+          description: X coordinate of the base tile
+        y:
+          type: integer
+          description: Y coordinate of the base tile
+        z:
+          type: integer
+          description: Zoom level
+        server:
+          type: string
+          description: Name of the tile server or WMS
+        layer:
+          type: string
+          description: Name of the map layer
+        shiftNb:
+          type: integer
+          description: Number of tiles to extend around the base tile
+        isCropped:
+          type: boolean
+          description: Whether the resulting image should be cropped around the center
+        latitude:
+          type: number
+          format: double
+          description: Latitude of the central point
+        longitude:
+          type: number
+          format: double
+          description: Longitude of the central point
