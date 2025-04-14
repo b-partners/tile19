@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM;
+
 @Controller
 @AllArgsConstructor
 public class TileExtenderController {
@@ -41,6 +43,7 @@ public class TileExtenderController {
         headers.add("pointer_y", String.valueOf(dyInPx));
 
         return ResponseEntity.ok()
+                .contentType(APPLICATION_OCTET_STREAM)
                 .headers(headers)
                 .body(base64Encoded);
     }
