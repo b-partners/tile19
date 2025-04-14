@@ -1,0 +1,123 @@
+package fr.birdia.tile19.service;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import javax.imageio.ImageIO;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@AllArgsConstructor
+public class TilesDownloaderService {
+  private final String GEOSERVER_BASE_URL = "http://35.181.83.111/geoserver/cite/wms";
+  private final String IGN_BASE_URL = "https://data.geopf.fr/wmts";
+  private final String GEOSERVER = "geoserver";
+  private final XYZToBBOXService xyzToBBoxService;
+
+  static double[] tileToLatLon(int x, int y, int zoom) {
+    int n = (int) Math.pow(2, zoom);
+    double lonDeg = x / (double) n * 360.0 - 180.0;
+    double latRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / (double) n)));
+    double latDeg = Math.toDegrees(latRad);
+
+    return new double[] {latDeg, lonDeg};
+  }
+
+  public static int[] convertTilesCoordinateToTileColTileRow(int x, int y, int zoom) {
+    double[] latLon = tileToLatLon(x, y, zoom);
+    double latDeg = latLon[0];
+    double lonDeg = latLon[1];
+    // Perform the Mercator projection to tile coordinates
+    int n = (int) Math.pow(2, zoom);
+    double xtile = n * ((lonDeg + 180) / 360);
+    double latRad = Math.toRadians(latDeg);
+    double ytile = n * (1 - (Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI)) / 2;
+
+    return new int[] {(int) xtile, (int) ytile};
+  }
+
+  private HashMap<String, String> configureGeoserverParams(
+      String layer, double minX, double maxX, double minY, double maxY) {
+    HashMap<String, String> params = new HashMap<>();
+    params.put("layers", layer);
+    params.put("format", "image/jpeg");
+    params.put("width", "1024");
+    params.put("height", "1024");
+    params.put("bbox", minX + "," + minY + "," + maxX + "," + maxY);
+    params.put("srs", "EPSG:3857");
+    params.put("transparent", "true");
+    params.put("service", "WMS");
+    params.put("request", "GetMap");
+    return params;
+  }
+
+  private HashMap<String, String> configureIgnParams(int tileCol, int tileRow, int zoom) {
+    HashMap<String, String> params = new HashMap<>();
+    params.put("SERVICE", "WMTS");
+    params.put("REQUEST", "GetTile");
+    params.put("VERSION", "1.0.0");
+    params.put("LAYER", "ORTHOIMAGERY.ORTHOPHOTOS");
+    params.put("TILEMATRIXSET", "PM");
+    params.put("TILEMATRIX", String.valueOf(zoom));
+    params.put("TILECOL", String.valueOf(tileCol));
+    params.put("TILEROW", String.valueOf(tileRow));
+    params.put("STYLE", "normal");
+    params.put("FORMAT", "image/jpeg");
+    return params;
+  }
+
+  public BufferedImage download(int xTile, int yTile, int zoom, String server, String layer)
+      throws IOException {
+    StringBuilder urlBuilder = null;
+    if (GEOSERVER.equals(server)) {
+      double[] bbox = xyzToBBoxService.xyzToBBox(xTile, yTile, zoom);
+      double minX = bbox[0];
+      double minY = bbox[1];
+      double maxX = bbox[2];
+      double maxY = bbox[3];
+
+      HashMap<String, String> params = configureGeoserverParams(layer, minX, maxX, minY, maxY);
+      urlBuilder = new StringBuilder(GEOSERVER_BASE_URL);
+      urlBuilder.append("?");
+      for (HashMap.Entry<String, String> entry : params.entrySet()) {
+        urlBuilder.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
+        urlBuilder.append("=");
+        urlBuilder.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+        urlBuilder.append("&");
+      }
+      urlBuilder.setLength(urlBuilder.length() - 1);
+    } else {
+      int[] tilColRow = convertTilesCoordinateToTileColTileRow(xTile, yTile, zoom);
+      int tileCol = tilColRow[0];
+      int tileRow = tilColRow[1];
+
+      HashMap<String, String> params = configureIgnParams(tileCol, tileRow, zoom);
+      urlBuilder = new StringBuilder(IGN_BASE_URL);
+      urlBuilder.append("?");
+      for (HashMap.Entry<String, String> entry : params.entrySet()) {
+        urlBuilder.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
+        urlBuilder.append("=");
+        urlBuilder.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+        urlBuilder.append("&");
+      }
+      urlBuilder.setLength(urlBuilder.length() - 1);
+    }
+
+    URL url = new URL(urlBuilder.toString());
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    System.out.println("url=" + url);
+    connection.setRequestMethod("GET");
+
+    int responseCode = connection.getResponseCode();
+    if (responseCode == 200) {
+      return ImageIO.read(connection.getInputStream());
+    } else {
+      System.err.println("Erreur HTTP: " + responseCode);
+    }
+    return null;
+  }
+}
