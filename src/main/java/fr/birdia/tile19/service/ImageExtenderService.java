@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -112,6 +114,7 @@ public class ImageExtenderService {
       int x, int y, int x1, int x2, int y1, int y2, int z, String server, String layer)
       throws IOException {
     Map<String, CompletableFuture<BufferedImage>> futures = new HashMap<>();
+    ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     for (int dy = y1; dy < y2; dy++) {
       for (int dx = x1; dx < x2; dx++) {
@@ -127,7 +130,7 @@ public class ImageExtenderService {
                   } catch (IOException e) {
                     throw new RuntimeException(e);
                   }
-                });
+                }, executor);
 
         futures.put(key, future);
       }
