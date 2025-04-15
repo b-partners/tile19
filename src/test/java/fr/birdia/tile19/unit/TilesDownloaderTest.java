@@ -26,7 +26,6 @@ public class TilesDownloaderTest {
         tilesDownloaderService.download(haguenauXtile, haguenauYTile, zoom, server, layer);
 
     assertNotNull(image);
-
     saveImage(image, haguenauXtile, haguenauYTile, zoom);
   }
 
@@ -41,7 +40,6 @@ public class TilesDownloaderTest {
     BufferedImage image = tilesDownloaderService.download(x_19, y_19, z, server, layer);
 
     assertNotNull(image);
-
     saveImage(image, x_19, y_19, z);
   }
 
@@ -53,9 +51,9 @@ public class TilesDownloaderTest {
     File outputFile = new File(outputDir, String.format("ign_tile_%d_%d_%d.jpg", x, y, z));
     boolean result = ImageIO.write(image, "jpg", outputFile);
     if (result) {
-      System.out.println("✅ Image saved to: " + outputFile.getAbsolutePath());
+      System.out.println("Image saved to: " + outputFile.getAbsolutePath());
     } else {
-      System.out.println("⚠️ Failed to save image.");
+      System.out.println("Failed to save image.");
     }
   }
 }

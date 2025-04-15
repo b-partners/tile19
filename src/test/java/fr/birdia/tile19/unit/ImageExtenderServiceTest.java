@@ -24,6 +24,24 @@ public class ImageExtenderServiceTest {
   ImageExtenderService extender = new ImageExtenderService(downloader, merger);
 
   @Test
+  public void full_dijon_image_extension_ok() throws Exception {
+    String base64Result =
+        extender.process(
+            538969, 367435, 20, "geoserver", "COTE_D_OR_2022_5cm", 0, false, 47.3212601, 5.040525);
+
+    image_extension_assertion(base64Result, "dijon_full_image_extended.jpg");
+  }
+
+  @Test
+  public void full_herault_image_extension_ok() throws Exception {
+    String base64Result =
+        extender.process(
+            533789, 383778, 20, "geoserver", "HERAULT_2020_5cm", 0, false, 43.3804375, 3.2621094);
+
+    image_extension_assertion(base64Result, "herault_full_image_extended.jpg");
+  }
+
+  @Test
   public void full_image_extension_ok() throws Exception {
     String base64Result =
         extender.process(
@@ -107,7 +125,6 @@ public class ImageExtenderServiceTest {
     if (!outputDir.exists()) {
       outputDir.mkdirs();
     }
-
     File outputFile = new File(outputDir, filename.endsWith(".jpg") ? filename : filename + ".jpg");
     ImageIO.write(image, "jpg", outputFile);
   }

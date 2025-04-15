@@ -6,7 +6,7 @@ info:
   version: 'latest'
 
 servers:
-  - url: ""
+  - url: "https://ifdovpj3xe.execute-api.eu-west-3.amazonaws.com/"
 
 paths:
   /extend:
@@ -43,7 +43,7 @@ paths:
               schema:
                 type: string
           content:
-            application/octet-stream:
+            text/plain:
               schema:
                 type: string
                 format: base64
