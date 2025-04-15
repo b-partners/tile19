@@ -2,18 +2,15 @@ package fr.birdia.tile19.service;
 
 import static fr.birdia.tile19.service.TilesDownloaderService.tileToLatLon;
 
+import fr.birdia.tile19.concurrency.Workers;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Callable;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,10 +30,13 @@ public class ImageExtenderService {
   private Integer y1 = null;
   private Integer x2 = null;
   private Integer y2 = null;
+  private Workers workers;
 
-  public ImageExtenderService(TilesDownloaderService downloader, TilesMergerService merger) {
+  public ImageExtenderService(
+      TilesDownloaderService downloader, TilesMergerService merger, Workers workers) {
     this.tileDownloader = downloader;
     this.tileMerger = merger;
+    this.workers = workers;
   }
 
   public double[] computeXYOffsets(double lat, double lon, int x, int y, int z) {
@@ -113,37 +113,27 @@ public class ImageExtenderService {
   public String downloadTiles(
       int x, int y, int x1, int x2, int y1, int y2, int z, String server, String layer)
       throws IOException {
-    Map<String, CompletableFuture<BufferedImage>> futures = new HashMap<>();
-    ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    List<Callable<BufferedImage>> callables = new ArrayList<>();
+    List<String> keys = new ArrayList<>();
 
     for (int dy = y1; dy < y2; dy++) {
       for (int dx = x1; dx < x2; dx++) {
         int tileX = x + dx;
         int tileY = y + dy;
         String key = dy + "," + dx;
-
-        CompletableFuture<BufferedImage> future =
-            CompletableFuture.supplyAsync(
-                () -> {
-                  try {
-                    return tileDownloader.download(tileX, tileY, z, server, layer);
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
-                  }
-                }, executor);
-
-        futures.put(key, future);
+        keys.add(key);
+        callables.add(() -> tileDownloader.download(tileX, tileY, z, server, layer));
       }
     }
 
-    CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[0])).join();
+    List<BufferedImage> results = workers.invokeAll(callables);
 
     List<List<BufferedImage>> imgGrid = new ArrayList<>();
+    int index = 0;
     for (int dy = y1; dy < y2; dy++) {
       List<BufferedImage> row = new ArrayList<>();
       for (int dx = x1; dx < x2; dx++) {
-        String key = dy + "," + dx;
-        row.add(futures.get(key).join());
+        row.add(results.get(index++));
       }
       imgGrid.add(row);
     }

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import fr.birdia.tile19.concurrency.Workers;
 import fr.birdia.tile19.service.ImageExtenderService;
 import fr.birdia.tile19.service.TilesDownloaderService;
 import fr.birdia.tile19.service.TilesMergerService;
@@ -21,7 +22,8 @@ public class ImageExtenderServiceTest {
   XYZToBBOXService xyzToBBOXService = new XYZToBBOXService();
   TilesDownloaderService downloader = new TilesDownloaderService(xyzToBBOXService);
   TilesMergerService merger = new TilesMergerService();
-  ImageExtenderService extender = new ImageExtenderService(downloader, merger);
+  Workers workers = new Workers();
+  ImageExtenderService extender = new ImageExtenderService(downloader, merger, workers);
 
   @Test
   public void full_dijon_image_extension_ok() throws Exception {
