@@ -1,0 +1,179 @@
+package fr.birdia.tile19.service;
+
+import static fr.birdia.tile19.service.TilesDownloaderService.tileToLatLon;
+
+import fr.birdia.tile19.concurrency.Workers;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.concurrent.Callable;
+import javax.imageio.ImageIO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+@Slf4j
+@Service
+public class ImageExtenderService {
+  private final TilesDownloaderService tileDownloader;
+  private final TilesMergerService tileMerger;
+  private final double EARTH_CIRCUMFERENCE_IN_METERS = 40075016.686;
+  private final double LAT_KM_PER_DEG = 110.574;
+  private final double LON_KM_PER_DEG = 111.320;
+  private int imageSize = 1024;
+  private Integer x = null;
+  private Integer y = null;
+  private Integer x1 = null;
+  private Integer y1 = null;
+  private Integer x2 = null;
+  private Integer y2 = null;
+  private Workers workers;
+
+  public ImageExtenderService(
+      TilesDownloaderService downloader, TilesMergerService merger, Workers workers) {
+    this.tileDownloader = downloader;
+    this.tileMerger = merger;
+    this.workers = workers;
+  }
+
+  public double[] computeXYOffsets(double lat, double lon, int x, int y, int z) {
+    double[] pixelCoords = convertCoordinatesToPixel(lat, lon, x, y, z);
+    return new double[] {
+      pixelCoords[0] - 512, pixelCoords[1] - 512, pixelCoords[0], pixelCoords[1]
+    };
+  }
+
+  public String process(
+      int x,
+      int y,
+      int z,
+      String server,
+      String layer,
+      int shiftNb,
+      boolean isCropped,
+      double lat,
+      double lon)
+      throws Exception {
+
+    long totalStart = System.currentTimeMillis();
+    log.info("Processing");
+    this.x = x;
+    this.y = y;
+    this.x1 = -1;
+    this.x2 = 2;
+    this.y1 = -1;
+    this.y2 = 2;
+
+    if (shiftNb != 0) {
+      this.x2 += shiftNb;
+      this.x1 += shiftNb;
+
+      String result =
+          downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
+
+      log.info("Processed with shift in {}ms", System.currentTimeMillis() - totalStart);
+      return result;
+    }
+
+    if (isCropped) {
+      long start = System.currentTimeMillis();
+      int cropSize = 1024;
+      if (server.equals("geoserver_ign")) {
+        cropSize = 256;
+        imageSize = 256;
+      }
+
+      double[] pixelCoords = convertCoordinatesToPixel(lat, lon, x, y, z);
+      String base64Data =
+          downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
+      byte[] imageBytes = Base64.getDecoder().decode(base64Data);
+      BufferedImage image = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
+
+      BufferedImage cropped =
+          centerImageOnPoint(image, (int) pixelCoords[0], (int) pixelCoords[1], cropSize);
+
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      ImageIO.write(cropped, "jpg", outputStream);
+
+      log.info("Successfully cropped in {}ms", System.currentTimeMillis() - start);
+      log.info("Total process time: {}ms", System.currentTimeMillis() - totalStart);
+
+      return Base64.getEncoder().encodeToString(outputStream.toByteArray());
+    } else {
+      String result =
+          downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
+      log.info("Processed (no crop) in {}ms", System.currentTimeMillis() - totalStart);
+      return result;
+    }
+  }
+
+  public String downloadTiles(
+      int x, int y, int x1, int x2, int y1, int y2, int z, String server, String layer)
+      throws IOException {
+    List<Callable<BufferedImage>> callables = new ArrayList<>();
+    List<String> keys = new ArrayList<>();
+
+    for (int dy = y1; dy < y2; dy++) {
+      for (int dx = x1; dx < x2; dx++) {
+        int tileX = x + dx;
+        int tileY = y + dy;
+        String key = dy + "," + dx;
+        keys.add(key);
+        callables.add(() -> tileDownloader.download(tileX, tileY, z, server, layer));
+      }
+    }
+
+    List<BufferedImage> results = workers.invokeAll(callables);
+
+    List<List<BufferedImage>> imgGrid = new ArrayList<>();
+    int index = 0;
+    for (int dy = y1; dy < y2; dy++) {
+      List<BufferedImage> row = new ArrayList<>();
+      for (int dx = x1; dx < x2; dx++) {
+        row.add(results.get(index++));
+      }
+      imgGrid.add(row);
+    }
+
+    BufferedImage mergedImage = tileMerger.merge(imgGrid);
+
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ImageIO.write(mergedImage, "jpg", outputStream);
+    byte[] encoded = Base64.getEncoder().encode(outputStream.toByteArray());
+    return new String(encoded, StandardCharsets.UTF_8);
+  }
+
+  public double[] convertCoordinatesToPixel(double lat, double lon, int x, int y, int z) {
+    double[] tileOrigin = tileToLatLon(x, y, z);
+    double tileLat = tileOrigin[0];
+    double tileLon = tileOrigin[1];
+
+    double latRad = Math.toRadians(tileLat);
+    double pixelSurfaceInMeters =
+        (EARTH_CIRCUMFERENCE_IN_METERS * Math.cos(latRad)) / (Math.pow(2, z) * imageSize);
+
+    double dxInKm = (lon - tileLon) * LON_KM_PER_DEG * Math.cos(latRad);
+    double dyInKm = (lat - tileLat) * LAT_KM_PER_DEG;
+
+    double dxInPx = dxInKm * 1000 / pixelSurfaceInMeters;
+    double dyInPx = dyInKm * 1000 / pixelSurfaceInMeters;
+
+    return new double[] {dxInPx + imageSize, -dyInPx + imageSize};
+  }
+
+  public BufferedImage centerImageOnPoint(BufferedImage image, int x, int y, int cropSize) {
+    int left = x - cropSize / 2;
+    int top = y - cropSize / 2;
+
+    left = Math.max(left, 0);
+    top = Math.max(top, 0);
+
+    int right = Math.min(left + cropSize, image.getWidth());
+    int bottom = Math.min(top + cropSize, image.getHeight());
+
+    return image.getSubimage(left, top, right - left, bottom - top);
+  }
+}
