@@ -1,10 +1,12 @@
 package fr.birdia.tile19.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @AllArgsConstructor
 @Data
+@Builder
 public class TileExtenderRequestBody {
   private int x;
   private int y;

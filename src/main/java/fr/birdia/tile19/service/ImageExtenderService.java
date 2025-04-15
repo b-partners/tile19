@@ -11,6 +11,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -54,6 +55,8 @@ public class ImageExtenderService {
       double lat,
       double lon)
       throws Exception {
+
+    long totalStart = System.currentTimeMillis();
     log.info("Processing");
     this.x = x;
     this.y = y;
@@ -65,7 +68,12 @@ public class ImageExtenderService {
     if (shiftNb != 0) {
       this.x2 += shiftNb;
       this.x1 += shiftNb;
-      return downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
+
+      String result =
+          downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
+
+      log.info("Processed with shift in {}ms", System.currentTimeMillis() - totalStart);
+      return result;
     }
 
     if (isCropped) {
@@ -87,17 +95,23 @@ public class ImageExtenderService {
 
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
       ImageIO.write(cropped, "jpg", outputStream);
-      System.out.println("Successfully cropped in " + (System.currentTimeMillis() - start) + "ms");
+
+      log.info("Successfully cropped in {}ms", System.currentTimeMillis() - start);
+      log.info("Total process time: {}ms", System.currentTimeMillis() - totalStart);
+
       return Base64.getEncoder().encodeToString(outputStream.toByteArray());
     } else {
-      return downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
+      String result =
+          downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
+      log.info("Processed (no crop) in {}ms", System.currentTimeMillis() - totalStart);
+      return result;
     }
   }
 
   public String downloadTiles(
       int x, int y, int x1, int x2, int y1, int y2, int z, String server, String layer)
       throws IOException {
-    Map<String, BufferedImage> tiles = new HashMap<>();
+    Map<String, CompletableFuture<BufferedImage>> futures = new HashMap<>();
 
     for (int dy = y1; dy < y2; dy++) {
       for (int dx = x1; dx < x2; dx++) {
@@ -105,19 +119,28 @@ public class ImageExtenderService {
         int tileY = y + dy;
         String key = dy + "," + dx;
 
-        if (!tiles.containsKey(key)) {
-          BufferedImage tile = tileDownloader.download(tileX, tileY, z, server, layer);
-          tiles.put(key, tile);
-        }
+        CompletableFuture<BufferedImage> future =
+            CompletableFuture.supplyAsync(
+                () -> {
+                  try {
+                    return tileDownloader.download(tileX, tileY, z, server, layer);
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                });
+
+        futures.put(key, future);
       }
     }
+
+    CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[0])).join();
 
     List<List<BufferedImage>> imgGrid = new ArrayList<>();
     for (int dy = y1; dy < y2; dy++) {
       List<BufferedImage> row = new ArrayList<>();
       for (int dx = x1; dx < x2; dx++) {
         String key = dy + "," + dx;
-        row.add(tiles.get(key));
+        row.add(futures.get(key).join());
       }
       imgGrid.add(row);
     }
@@ -127,7 +150,6 @@ public class ImageExtenderService {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     ImageIO.write(mergedImage, "jpg", outputStream);
     byte[] encoded = Base64.getEncoder().encode(outputStream.toByteArray());
-
     return new String(encoded, StandardCharsets.UTF_8);
   }
 
