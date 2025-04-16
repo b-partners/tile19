@@ -121,8 +121,7 @@ public class TilesDownloaderService {
         HttpRequest.newBuilder()
             .uri(URI.create(urlBuilder.toString()))
             .header("Accept", "image/png, image/jpeg;q=0.9, */*;q=0.8")
-            .header("User-Agent", "TileDownloader/1.0")
-            .timeout(Duration.ofSeconds(60))
+            .timeout(Duration.ofSeconds(120))
             .GET()
             .build();
 

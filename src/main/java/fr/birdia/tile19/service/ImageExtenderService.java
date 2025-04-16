@@ -6,11 +6,12 @@ import fr.birdia.tile19.concurrency.Workers;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -59,7 +60,6 @@ public class ImageExtenderService {
       throws Exception {
 
     long totalStart = System.currentTimeMillis();
-    log.info("Processing");
     this.x = x;
     this.y = y;
     this.x1 = -1;
@@ -67,19 +67,7 @@ public class ImageExtenderService {
     this.y1 = -1;
     this.y2 = 2;
 
-    if (shiftNb != 0) {
-      this.x2 += shiftNb;
-      this.x1 += shiftNb;
-
-      String result =
-          downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
-
-      log.info("Processed with shift in {}ms", System.currentTimeMillis() - totalStart);
-      return result;
-    }
-
     if (isCropped) {
-      long start = System.currentTimeMillis();
       int cropSize = 1024;
       if (server.equals("geoserver_ign")) {
         cropSize = 256;
@@ -98,10 +86,16 @@ public class ImageExtenderService {
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
       ImageIO.write(cropped, "jpg", outputStream);
 
-      log.info("Successfully cropped in {}ms", System.currentTimeMillis() - start);
-      log.info("Total process time: {}ms", System.currentTimeMillis() - totalStart);
-
       return Base64.getEncoder().encodeToString(outputStream.toByteArray());
+    } else if (shiftNb != 0) {
+      this.x2 += shiftNb;
+      this.x1 += shiftNb;
+
+      String result =
+          downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
+
+      log.info("Processed with shift in {}ms", System.currentTimeMillis() - totalStart);
+      return result;
     } else {
       String result =
           downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
@@ -113,37 +107,36 @@ public class ImageExtenderService {
   public String downloadTiles(
       int x, int y, int x1, int x2, int y1, int y2, int z, String server, String layer)
       throws IOException {
-    List<Callable<BufferedImage>> callables = new ArrayList<>();
-    List<String> keys = new ArrayList<>();
+    BufferedImage[][] results = new BufferedImage[y2 - y1][x2 - x1];
+    List<Callable<Void>> callables = new ArrayList<>();
 
     for (int dy = y1; dy < y2; dy++) {
       for (int dx = x1; dx < x2; dx++) {
-        int tileX = x + dx;
-        int tileY = y + dy;
-        String key = dy + "," + dx;
-        keys.add(key);
-        callables.add(() -> tileDownloader.download(tileX, tileY, z, server, layer));
+        final int tileX = x + dx;
+        final int tileY = y + dy;
+        final int row = dy - y1;
+        final int col = dx - x1;
+
+        callables.add(
+            () -> {
+              BufferedImage img = tileDownloader.download(tileX, tileY, z, server, layer);
+              results[row][col] = img;
+              return null;
+            });
       }
     }
 
-    List<BufferedImage> results = workers.invokeAll(callables);
+    workers.invokeAll(callables);
 
-    List<List<BufferedImage>> imgGrid = new ArrayList<>();
-    int index = 0;
-    for (int dy = y1; dy < y2; dy++) {
-      List<BufferedImage> row = new ArrayList<>();
-      for (int dx = x1; dx < x2; dx++) {
-        row.add(results.get(index++));
-      }
-      imgGrid.add(row);
+    List<List<BufferedImage>> imgGrid =
+        Arrays.stream(results).map(Arrays::asList).collect(Collectors.toList());
+
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+      BufferedImage mergedImage = tileMerger.merge(imgGrid);
+
+      ImageIO.write(mergedImage, "jpg", outputStream);
+      return Base64.getEncoder().encodeToString(outputStream.toByteArray());
     }
-
-    BufferedImage mergedImage = tileMerger.merge(imgGrid);
-
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    ImageIO.write(mergedImage, "jpg", outputStream);
-    byte[] encoded = Base64.getEncoder().encode(outputStream.toByteArray());
-    return new String(encoded, StandardCharsets.UTF_8);
   }
 
   public double[] convertCoordinatesToPixel(double lat, double lon, int x, int y, int z) {

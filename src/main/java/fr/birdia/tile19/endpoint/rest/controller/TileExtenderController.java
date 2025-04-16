@@ -22,27 +22,27 @@ public class TileExtenderController {
     int x = body.getX();
     int y = body.getY();
     int z = body.getZ();
-    String server = body.getServer();
-    String layer = body.getLayer();
-    int shiftNb = body.getShiftNb();
-    boolean isCropped = body.isCropped();
     double lat = body.getLatitude();
     double lon = body.getLongitude();
 
-    double[] offsets = imageExtenderService.computeXYOffsets(lat, lon, x, y, z);
-    double xOffset = offsets[0];
-    double yOffset = offsets[1];
-    double dxInPx = offsets[2];
-    double dyInPx = offsets[3];
-
     String base64Encoded =
-        imageExtenderService.process(x, y, z, server, layer, shiftNb, isCropped, lat, lon);
+        imageExtenderService.process(
+            x,
+            y,
+            z,
+            body.getServer(),
+            body.getLayer(),
+            body.getShiftNb(),
+            body.isCropped(),
+            body.getLatitude(),
+            body.getLongitude());
 
+    double[] offsets = imageExtenderService.computeXYOffsets(lat, lon, x, y, z);
     HttpHeaders headers = new HttpHeaders();
-    headers.add("x_offset", String.valueOf(xOffset));
-    headers.add("y_offset", String.valueOf(yOffset));
-    headers.add("pointer_x", String.valueOf(dxInPx));
-    headers.add("pointer_y", String.valueOf(dyInPx));
+    headers.add("x_offset", String.valueOf(offsets[0]));
+    headers.add("y_offset", String.valueOf(offsets[1]));
+    headers.add("pointer_x", String.valueOf(offsets[2]));
+    headers.add("pointer_y", String.valueOf(offsets[3]));
 
     return ResponseEntity.ok().contentType(TEXT_PLAIN).headers(headers).body(base64Encoded);
   }

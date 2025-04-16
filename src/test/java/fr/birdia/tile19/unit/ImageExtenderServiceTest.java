@@ -57,7 +57,7 @@ public class ImageExtenderServiceTest {
             44.9120193,
             4.9125046);
 
-    image_extension_assertion(base64Result, "full_image_extended.jpg");
+    image_extension_assertion(base64Result, "auvergne_full_image_extended.jpg");
   }
 
   @Test
@@ -87,7 +87,7 @@ public class ImageExtenderServiceTest {
             "geoserver",
             "Auvergne_Rhone_Alpes_All_Region_5cm",
             -2,
-            true,
+            false,
             44.9120193,
             4.9125046);
 
@@ -104,7 +104,7 @@ public class ImageExtenderServiceTest {
             "geoserver",
             "Auvergne_Rhone_Alpes_All_Region_5cm",
             2,
-            true,
+            false,
             44.9120193,
             4.9125046);
 
