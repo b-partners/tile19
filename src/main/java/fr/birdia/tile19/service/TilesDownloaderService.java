@@ -2,16 +2,23 @@ package fr.birdia.tile19.service;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.InputStream;
+import java.net.URI;
 import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.HashMap;
 import javax.imageio.ImageIO;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class TilesDownloaderService {
   private final String GEOSERVER_BASE_URL = "http://35.181.83.111/geoserver/cite/wms";
   private final String IGN_BASE_URL = "https://data.geopf.fr/wmts";
@@ -71,24 +78,23 @@ public class TilesDownloaderService {
   }
 
   public BufferedImage download(int xTile, int yTile, int zoom, String server, String layer)
-      throws IOException {
-    StringBuilder urlBuilder = null;
-    if (GEOSERVER.equals(server)) {
-      double[] bbox = xyzToBBoxService.xyzToBBox(xTile, yTile, zoom);
-      double minX = bbox[0];
-      double minY = bbox[1];
-      double maxX = bbox[2];
-      double maxY = bbox[3];
+      throws IOException, InterruptedException {
+    StringBuilder urlBuilder;
 
-      HashMap<String, String> params = configureGeoserverParams(layer, minX, maxX, minY, maxY);
-      urlBuilder = new StringBuilder(GEOSERVER_BASE_URL);
-      urlBuilder.append("?");
-      for (HashMap.Entry<String, String> entry : params.entrySet()) {
-        urlBuilder.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
-        urlBuilder.append("=");
-        urlBuilder.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
-        urlBuilder.append("&");
-      }
+    if (GEOSERVER.equals(server)) {
+      urlBuilder = new StringBuilder();
+      double[] bbox = xyzToBBoxService.xyzToBBox(xTile, yTile, zoom);
+      HashMap<String, String> params =
+          configureGeoserverParams(layer, bbox[0], bbox[2], bbox[1], bbox[3]);
+      urlBuilder.append(GEOSERVER_BASE_URL).append("?");
+
+      params.forEach(
+          (key, value) ->
+              urlBuilder
+                  .append(URLEncoder.encode(key, StandardCharsets.UTF_8))
+                  .append("=")
+                  .append(URLEncoder.encode(value, StandardCharsets.UTF_8))
+                  .append("&"));
       urlBuilder.setLength(urlBuilder.length() - 1);
     } else {
       int[] tilColRow = convertTilesCoordinateToTileColTileRow(xTile, yTile, zoom);
@@ -107,16 +113,34 @@ public class TilesDownloaderService {
       urlBuilder.setLength(urlBuilder.length() - 1);
     }
 
-    URL url = new URL(urlBuilder.toString());
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    System.out.println("url=" + url);
-    connection.setRequestMethod("GET");
+    log.info("DEBUG URL: {}", urlBuilder);
 
-    int responseCode = connection.getResponseCode();
-    if (responseCode == 200) {
-      return ImageIO.read(connection.getInputStream());
+    HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
+
+    HttpRequest request =
+        HttpRequest.newBuilder()
+            .uri(URI.create(urlBuilder.toString()))
+            .header("Accept", "image/png, image/jpeg;q=0.9, */*;q=0.8")
+            .header("User-Agent", "TileDownloader/1.0")
+            .timeout(Duration.ofSeconds(60))
+            .GET()
+            .build();
+
+    HttpResponse<InputStream> response =
+        client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+    if (response.statusCode() == 200) {
+      String contentType = response.headers().firstValue("Content-Type").orElse("");
+      if (contentType.startsWith("image")) {
+        try (InputStream is = response.body()) {
+          return ImageIO.read(is);
+        }
+      } else {
+        String error = new String(response.body().readAllBytes(), StandardCharsets.UTF_8);
+        System.err.println("WMS Error: " + error);
+      }
     } else {
-      System.err.println("Erreur HTTP: " + responseCode);
+      System.err.println("HTTP Error " + response.statusCode() + ": " + response.body());
     }
     return null;
   }

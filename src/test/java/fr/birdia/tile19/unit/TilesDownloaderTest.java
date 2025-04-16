@@ -15,7 +15,7 @@ public class TilesDownloaderTest {
   TilesDownloaderService tilesDownloaderService = new TilesDownloaderService(xyzToBBOXService);
 
   @Test
-  public void tiles_downloader_geoserver_ok() throws IOException {
+  public void tiles_downloader_geoserver_ok() throws IOException, InterruptedException {
     int haguenauXtile = 546992;
     int haguenauYTile = 360926;
     int zoom = 20;
@@ -30,7 +30,7 @@ public class TilesDownloaderTest {
   }
 
   @Test
-  void tiles_downloader_ign_ok() throws IOException {
+  void tiles_downloader_ign_ok() throws IOException, InterruptedException {
     int x_19 = 259694;
     int y_19 = 182005;
     int z = 19;
