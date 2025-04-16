@@ -24,24 +24,24 @@ public class Workers {
   }
 
   @SneakyThrows
-  public <T> List<T> invokeAll(List<Callable<T>> callables) {
+  public List<Void> invokeAll(List<Callable<Void>> callables) {
     var parentThread = currentThread();
     callables =
         callables.stream()
             .map(
                 c ->
-                    (Callable<T>)
+                    (Callable<Void>)
                         () -> {
                           renameThread(
                               parentThread, getRandomSubThreadNamePrefixFrom(parentThread));
                           return c.call();
                         })
             .toList();
-    List<Future<T>> futures = executorService.invokeAll(callables);
+    List<Future<Void>> futures = executorService.invokeAll(callables);
     return futures.stream().map(this::handleFutureException).toList();
   }
 
-  private <T> T handleFutureException(Future<T> future) {
+  private Void handleFutureException(Future<Void> future) {
     try {
       return future.get();
     } catch (InterruptedException | ExecutionException e) {
