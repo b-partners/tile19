@@ -17,6 +17,7 @@ public class TilesMergerService {
   }
 
   private BufferedImage horizontalConcatenation(List<BufferedImage> images) {
+    System.out.println("Not null=" + images);
     int height = images.stream().mapToInt(BufferedImage::getHeight).min().orElseThrow();
     int totalWidth =
         images.stream().mapToInt(img -> img.getWidth() * height / img.getHeight()).sum();
