@@ -115,8 +115,7 @@ public class TilesDownloaderService {
 
     log.info("DEBUG URL: {}", urlBuilder);
 
-    HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
-
+    HttpClient client = HttpClient.newBuilder().build();
     HttpRequest request =
         HttpRequest.newBuilder()
             .uri(URI.create(urlBuilder.toString()))
@@ -124,7 +123,6 @@ public class TilesDownloaderService {
             .timeout(Duration.ofSeconds(120))
             .GET()
             .build();
-
     HttpResponse<InputStream> response =
         client.send(request, HttpResponse.BodyHandlers.ofInputStream());
 

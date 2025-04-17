@@ -58,8 +58,6 @@ public class ImageExtenderService {
       double lat,
       double lon)
       throws Exception {
-
-    long totalStart = System.currentTimeMillis();
     this.x = x;
     this.y = y;
     this.x1 = -1;
@@ -71,40 +69,41 @@ public class ImageExtenderService {
       int cropSize = 1024;
       if (server.equals("geoserver_ign")) {
         cropSize = 256;
-        imageSize = 256;
+        this.imageSize = 256;
       }
 
       double[] pixelCoords = convertCoordinatesToPixel(lat, lon, x, y, z);
-      String base64Data =
-          downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
-      byte[] imageBytes = Base64.getDecoder().decode(base64Data);
+      byte[] imageBytes =
+          downloadTilesBytes(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
       BufferedImage image = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
-
       BufferedImage cropped =
           centerImageOnPoint(image, (int) pixelCoords[0], (int) pixelCoords[1], cropSize);
 
-      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-      ImageIO.write(cropped, "jpg", outputStream);
-
-      return Base64.getEncoder().encodeToString(outputStream.toByteArray());
+      return convertImageToBase64(cropped);
     } else if (shiftNb != 0) {
       this.x2 += shiftNb;
       this.x1 += shiftNb;
 
-      String result =
-          downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
-
-      log.info("Processed with shift in {}ms", System.currentTimeMillis() - totalStart);
-      return result;
-    } else {
-      String result =
-          downloadTiles(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
-      log.info("Processed (no crop) in {}ms", System.currentTimeMillis() - totalStart);
-      return result;
+      return downloadTilesBytesAndConvertToBase64(z, server, layer);
     }
+    return downloadTilesBytesAndConvertToBase64(z, server, layer);
   }
 
-  public String downloadTiles(
+  public String convertImageToBase64(BufferedImage image) throws IOException {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ImageIO.write(image, "jpg", outputStream);
+    return Base64.getEncoder().encodeToString(outputStream.toByteArray());
+  }
+
+  public String downloadTilesBytesAndConvertToBase64(int z, String server, String layer)
+      throws IOException {
+    byte[] imageBytes =
+        downloadTilesBytes(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
+    BufferedImage image = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
+    return convertImageToBase64(image);
+  }
+
+  public byte[] downloadTilesBytes(
       int x, int y, int x1, int x2, int y1, int y2, int z, String server, String layer)
       throws IOException {
     BufferedImage[][] results = new BufferedImage[y2 - y1][x2 - x1];
@@ -133,9 +132,8 @@ public class ImageExtenderService {
 
     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
       BufferedImage mergedImage = tileMerger.merge(imgGrid);
-
       ImageIO.write(mergedImage, "jpg", outputStream);
-      return Base64.getEncoder().encodeToString(outputStream.toByteArray());
+      return outputStream.toByteArray();
     }
   }
 
