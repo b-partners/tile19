@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Controller
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class TileExtenderController {
   private final ImageExtenderService imageExtenderService;
 
-  @PutMapping("/extend")
+  @PostMapping("/extend")
   public ResponseEntity<String> extendImage(@RequestBody TileExtenderRequestBody body)
       throws Exception {
     int x = body.getX();
