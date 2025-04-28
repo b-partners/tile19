@@ -30,7 +30,7 @@ public class TileExtenderMinAverageMaxIT extends FacadeIT {
     long end = System.currentTimeMillis();
     long elapsedTime = end - start;
 
-    log.info("Tarn et Garonne Elapsed time={}", elapsedTime);
+    log.info("Tarn et Garonne", elapsedTime);
 
     //    assertTrue(elapsedTime < this.seuil, "Elapsed time: " + elapsedTime + "ms");
     assertNotNull(response);
@@ -43,7 +43,7 @@ public class TileExtenderMinAverageMaxIT extends FacadeIT {
     long end = System.currentTimeMillis();
     long elapsedTime = end - start;
 
-    log.info("1 Rue de la Vau Saint-Jacques, 79200 Parthenay, France Elapsed time={}", elapsedTime);
+    log.info("1 Rue de la Vau Saint-Jacques, 79200 Parthenay, France", elapsedTime);
 
     //    assertTrue(elapsedTime < this.seuil, "Elapsed time: " + elapsedTime + "ms");
     assertNotNull(response);
@@ -55,7 +55,7 @@ public class TileExtenderMinAverageMaxIT extends FacadeIT {
     long end = System.currentTimeMillis();
     long elapsedTime = end - start;
 
-    log.info("Marnes Elapsed time={}", elapsedTime);
+    log.info("Marnes", elapsedTime);
 
     //    assertTrue(elapsedTime < this.seuil, "Elapsed time: " + elapsedTime + "ms");
     assertNotNull(response);

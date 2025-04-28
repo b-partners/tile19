@@ -32,409 +32,210 @@ import static fr.birdia.tile19.testdata.Zone.photo_aerienne_2;
 import static fr.birdia.tile19.testdata.Zone.photo_aerienne_3;
 import static fr.birdia.tile19.testdata.Zone.rhone;
 import static fr.birdia.tile19.testdata.Zone.tarn_et_garonne;
+import static java.lang.System.currentTimeMillis;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import fr.birdia.tile19.conf.FacadeIT;
 import fr.birdia.tile19.endpoint.rest.controller.TileExtenderController;
-import fr.birdia.tile19.service.ImageExtenderService;
-import fr.birdia.tile19.service.TilesDownloaderService;
-import fr.birdia.tile19.service.TilesMergerService;
+import fr.birdia.tile19.model.TileExtenderRequestBody;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 
 @Slf4j
 public class TileExtenderPerfIT extends FacadeIT {
   @Autowired TileExtenderController tileExtenderController;
-  @Autowired ImageExtenderService imageExtenderService;
-  @Autowired TilesDownloaderService tilesDownloaderService;
-  @Autowired TilesMergerService tilesMergerService;
 
-  @Test
-  public void extend_tarn_et_garonne_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(tarn_et_garonne());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
+  private static final boolean IS_LOCAL = "local".equals(System.getenv("ENV"));
+  private static final Duration NON_LOCAL_MAX_DURATION = Duration.ofMinutes(2);
+  private static final Duration SLOW_MAX_DURATION =
+      IS_LOCAL ? Duration.ofSeconds(20) : NON_LOCAL_MAX_DURATION;
+  private static final Duration QUICK_MAX_DURATION =
+      IS_LOCAL ? Duration.ofSeconds(7) : NON_LOCAL_MAX_DURATION;
 
-    log.info("Tarn et Garonne Elapsed time={}", elapsedTime);
+  private void extendTile(TileExtenderRequestBody request, String name, Duration maxDuration) {
+    var start = currentTimeMillis();
+    try {
+      var response = tileExtenderController.extendImage(request);
+      var elapsedTime = currentTimeMillis() - start;
 
-    assertNotNull(response);
+      log.info(name + ". Elapsed time={}", elapsedTime);
+
+      assertNotNull(response);
+      assertTrue(elapsedTime < maxDuration.toMillis());
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void extendTile(TileExtenderRequestBody request, String name) {
+    extendTile(request, name, QUICK_MAX_DURATION);
   }
 
   @Test
-  public void extend_Heurtault_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(photo_aerienne_1());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("71 Rue Heurtault, 93300 Aubervilliers Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_tarn_et_garonne() {
+    extendTile(tarn_et_garonne(), "Tarn et Garonne");
   }
 
   @Test
-  public void extend_haut_rhin_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(haut_rhin());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Haut Rhin Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_Heurtault() {
+    extendTile(photo_aerienne_1(), "71 Rue Heurtault, 93300 Aubervilliers");
   }
 
   @Test
-  public void extend_haut_de_seine_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(haut_de_seine());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info(
-        "Haut de seine : 18 Rue Marie Et Pierre Curie, 92800 Puteaux Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_haut_rhin() {
+    extendTile(haut_rhin(), "Haut Rhin");
   }
 
   @Test
-  public void extend_chambery_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(pcrs_1());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("1 Rue Sommeiller, 73000 Chambéry Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_haut_de_seine() {
+    extendTile(haut_de_seine(), "Haut de seine : 18 Rue Marie Et Pierre Curie, 92800 Puteaux");
   }
 
   @Test
-  public void extend_parthenay_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(pcrs_2());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("1 Rue de la Vau Saint-Jacques, 79200 Parthenay, France Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_chambery() {
+    extendTile(pcrs_1(), "1 Rue Sommeiller, 73000 Chambéry");
   }
 
   @Test
-  public void extend_Nogent_sur_Marne_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(photo_aerienne_2());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("2 Rue François Rolland, 94130 Nogent-sur-Marne Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_parthenay() {
+    extendTile(pcrs_2(), "1 Rue de la Vau Saint-Jacques, 79200 Parthenay, France");
   }
 
   @Test
-  public void extend_gironde_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(gironde());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Gironde Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_Nogent_sur_Marne() {
+    extendTile(photo_aerienne_2(), "2 Rue François Rolland, 94130 Nogent-sur-Marne");
   }
 
   @Test
-  public void extend_loire_atlantique_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(loire_atlantique());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Loire Atlantique Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_gironde() {
+    extendTile(gironde(), "Gironde");
   }
 
   @Test
-  public void extend_poitiers_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(pcrs_3());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("17 Rue Geneviève Fauconnier, 86000 Poitiers Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_loire_atlantique() {
+    extendTile(loire_atlantique(), "Loire Atlantique");
   }
 
   @Test
-  public void extend_saint_jacques_de_la_lande_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(pcrs_4());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("63 Bd Jean Mermoz, 35136 Saint-Jacques-de-la-Lande Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_poitiers() {
+    extendTile(pcrs_3(), "17 Rue Geneviève Fauconnier, 86000 Poitiers");
   }
 
   @Test
-  public void extend_toulouse_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(pcrs_5());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("2 Rue de Cugnaux, 31300 Toulouse Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_saint_jacques_de_la_lande() {
+    extendTile(pcrs_4(), "63 Bd Jean Mermoz, 35136 Saint-Jacques-de-la-Lande");
   }
 
   @Test
-  public void extend_indre_et_loire_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(indre_et_loire());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("27 Rue Édouard Vaillant, 37000 Tours, France Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_toulouse() {
+    extendTile(pcrs_5(), "2 Rue de Cugnaux, 31300 Toulouse");
   }
 
   @Test
-  public void extend_carcassone_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(pcrs_6());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("4 Rue Jacques Louis David, 11000 Carcassonne Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_carcassone() {
+    extendTile(pcrs_6(), "4 Rue Jacques Louis David, 11000 Carcassonne");
   }
 
   @Test
-  public void extend_arles_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(pcrs_7());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info(
-        "Mas de la Chassagnette, D36 Route Sambuc, 13200 Arles, FranceElapsed time={}",
-        elapsedTime);
-
-    assertNotNull(response);
+  public void extend_arles() {
+    extendTile(
+        pcrs_7(), "Mas de la Chassagnette, D36 Route Sambuc, 13200 Arles, FranceElapsed time={}");
   }
 
   @Test
-  public void extend_alpes_maritimes_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(alpes_maritimes());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Alpes Maritimes Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_alpes_maritimes() {
+    extendTile(alpes_maritimes(), "Alpes Maritimes");
   }
 
   @Test
-  public void extend_charente_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(charente());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Charente Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_charente() {
+    extendTile(charente(), "Charente");
   }
 
   @Test
-  public void extend_bas_rhin_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(bas_rhin());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Bas Rhin Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_bas_rhin() {
+    extendTile(bas_rhin(), "Bas Rhin");
   }
 
   @Test
-  public void extend_auvergne_rhone_alpes_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(auvergne_rhone_alpes());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Auvergne Rhone Alpes Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_rhone() {
+    extendTile(rhone(), "Rhone");
   }
 
   @Test
-  public void extend_rhone_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(rhone());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Rhone Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_ortho_lisieux() {
+    extendTile(ortho_lisieux(), "Ortho Lisieux");
   }
 
   @Test
-  public void extend_meurthe_et_moselle_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(meurthe_et_moselle());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Meurthe et Moselle Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_cote_d_or_2022() {
+    extendTile(cote_d_or_2022(), "Cote d'Or 2022");
   }
 
   @Test
-  public void extend_ortho_lisieux_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(ortho_lisieux());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Ortho Lisieux Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_vannes() {
+    extendTile(pcrs_8(), "13 Rue Honoré Daumier, 56000 Vannes");
   }
 
   @Test
-  public void extend_cote_d_or_2022_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(cote_d_or_2022());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Cote d'Or 2022 Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_paris() {
+    extendTile(photo_aerienne_3(), "8 rue puget 75018 Paris");
   }
 
   @Test
-  public void extend_cote_d_or_2024_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(cote_d_or_2024());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
+  public void extend_herault() {
+    extendTile(herault(), "Herault");
+  }
 
-    log.info("Cote d'Or 2024 Elapsed time={}", elapsedTime);
+  /* ************************************************************** */
+  /* ************************ Slow queries ************************ */
+  /* ************************************************************** */
 
-    assertNotNull(response);
+  @Test
+  public void extend_cote_d_or_2024() {
+    extendTile(cote_d_or_2024(), "Cote d'Or 2024", SLOW_MAX_DURATION);
   }
 
   @Test
-  public void extend_finistere_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(finistere());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Finistere Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_finistere() {
+    extendTile(finistere(), "Finistere", SLOW_MAX_DURATION);
   }
 
   @Test
-  public void extend_manche_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(manche());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Manche Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_manche() {
+    extendTile(manche(), "Manche", SLOW_MAX_DURATION);
   }
 
   @Test
-  public void extend_vannes_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(pcrs_8());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("13 Rue Honoré Daumier, 56000 Vannes Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_rouen() {
+    extendTile(pcrs_9(), "76000 Rouen, France", SLOW_MAX_DURATION);
   }
 
   @Test
-  public void extend_rouen_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(pcrs_9());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("76000 Rouen, France Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_moselle() {
+    extendTile(moselle(), "Moselle", SLOW_MAX_DURATION);
   }
 
   @Test
-  public void extend_moselle_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(moselle());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Moselle Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_marnes() {
+    extendTile(marnes(), "Marnes", SLOW_MAX_DURATION);
   }
 
   @Test
-  public void extend_marnes_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(marnes());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Marnes Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_meurthe_et_moselle() {
+    extendTile(meurthe_et_moselle(), "Meurthe et Moselle", SLOW_MAX_DURATION);
   }
 
   @Test
-  public void extend_paris_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(photo_aerienne_3());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("8 rue puget 75018 Paris Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_auvergne_rhone_alpes() {
+    extendTile(auvergne_rhone_alpes(), "Auvergne Rhone Alpes", SLOW_MAX_DURATION);
   }
 
   @Test
-  public void extend_herault_faster_image_ok() throws Exception {
-    long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(herault());
-    long end = System.currentTimeMillis();
-    long elapsedTime = end - start;
-
-    log.info("Herault Elapsed time={}", elapsedTime);
-
-    assertNotNull(response);
+  public void extend_indre_et_loire() {
+    extendTile(indre_et_loire(), "27 Rue Édouard Vaillant, 37000 Tours, France", SLOW_MAX_DURATION);
   }
 }
