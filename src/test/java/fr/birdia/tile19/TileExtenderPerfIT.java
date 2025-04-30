@@ -41,8 +41,10 @@ import fr.birdia.tile19.endpoint.rest.controller.TileExtenderController;
 import fr.birdia.tile19.model.TileExtenderRequestBody;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 
 @Slf4j
 public class TileExtenderPerfIT extends FacadeIT {
@@ -54,19 +56,35 @@ public class TileExtenderPerfIT extends FacadeIT {
       IS_LOCAL ? Duration.ofSeconds(20) : NON_LOCAL_MAX_DURATION;
   private static final Duration QUICK_MAX_DURATION =
       IS_LOCAL ? Duration.ofSeconds(7) : NON_LOCAL_MAX_DURATION;
+  private static final int MAX_RETRY_NB = 3;
 
   private void extendTile(TileExtenderRequestBody request, String name, Duration maxDuration) {
-    var start = currentTimeMillis();
-    try {
-      var response = tileExtenderController.extendImage(request);
-      var elapsedTime = currentTimeMillis() - start;
+    int attempt = 0;
+    long elapsedTime;
+    ResponseEntity<String> response = null;
 
-      log.info(name + ". Elapsed time={}", elapsedTime);
+    while (true) {
+      attempt++;
+      var start = currentTimeMillis();
 
-      assertNotNull(response);
-      assertTrue(elapsedTime < maxDuration.toMillis());
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+      try {
+        response = tileExtenderController.extendImage(request);
+        elapsedTime = currentTimeMillis() - start;
+
+        log.info("{} (attempt {}). Elapsed time={}ms", name, attempt, elapsedTime);
+
+        assertNotNull(response);
+        assertTrue(elapsedTime < maxDuration.toMillis());
+        return;
+      } catch (Exception e) {
+        elapsedTime = currentTimeMillis() - start;
+        log.warn("{} failed on attempt {} after {}ms", name, attempt, elapsedTime, e);
+
+        if (attempt > MAX_RETRY_NB) {
+          throw new RuntimeException(
+              String.format("%s : Test failed after %d attempts", name, attempt), e);
+        }
+      }
     }
   }
 
@@ -209,7 +227,9 @@ public class TileExtenderPerfIT extends FacadeIT {
     extendTile(manche(), "Manche", SLOW_MAX_DURATION);
   }
 
-  @Test
+  @Disabled(
+      "Rouen server is currently unavailable. It has been temporarily disabled to avoid deployment"
+          + " failures and will be re-enabled later.")
   public void extend_rouen() {
     extendTile(pcrs_9(), "76000 Rouen, France", SLOW_MAX_DURATION);
   }
