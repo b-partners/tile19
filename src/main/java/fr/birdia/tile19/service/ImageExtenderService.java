@@ -137,6 +137,14 @@ public class ImageExtenderService {
     }
   }
 
+  public String extendExistingTiles(List<BufferedImage> images) throws IOException {
+    List<List<BufferedImage>> list2D =
+        List.of(images.subList(0, 3), images.subList(3, 6), images.subList(6, 9));
+
+    BufferedImage mergedImage = tileMerger.merge(list2D);
+    return convertImageToBase64(mergedImage);
+  }
+
   public double[] convertCoordinatesToPixel(double lat, double lon, int x, int y, int z) {
     double[] tileOrigin = tileToLatLon(x, y, z);
     double tileLat = tileOrigin[0];

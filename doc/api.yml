@@ -48,7 +48,47 @@ paths:
                 type: string
                 format: base64
                 description: Base64-encoded image
-
+  /extend/existing-tiles:
+    put:
+      description: Extend tile from existing tiles
+      operationId: extendExistingTiles
+      tags:
+        - Extender
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file1
+                - file2
+                - file3
+                - file4
+                - file5
+                - file6
+                - file7
+                - file8
+                - file9
+              properties:
+                file1: { type: string, format: binary }
+                file2: { type: string, format: binary }
+                file3: { type: string, format: binary }
+                file4: { type: string, format: binary }
+                file5: { type: string, format: binary }
+                file6: { type: string, format: binary }
+                file7: { type: string, format: binary }
+                file8: { type: string, format: binary }
+                file9: { type: string, format: binary }
+      responses:
+        '200':
+          description: Image successfully generated
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: base64
+                description: Base64-encoded image
 components:
   schemas:
     TileExtenderRequestBody:
