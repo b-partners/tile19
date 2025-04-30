@@ -1,6 +1,7 @@
 package fr.birdia.tile19.service;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -140,5 +141,17 @@ public class TilesDownloaderService {
       System.err.println("HTTP Error " + response.statusCode() + ": " + response.body());
     }
     return null;
+  }
+
+  private void saveImageToFile(BufferedImage image, int xTile, int yTile, int zoom, String server)
+      throws IOException {
+    String serverName = server.equals(GEOSERVER) ? "geoserver" : "ign";
+    String fileName = String.format("%s_tile_%d_%d_zoom_%d.png", serverName, xTile, yTile, zoom);
+
+    File outputFile = new File("downloads", fileName);
+    outputFile.getParentFile().mkdirs();
+
+    ImageIO.write(image, "PNG", outputFile);
+    System.out.println("Image saved to " + outputFile.getAbsolutePath());
   }
 }
