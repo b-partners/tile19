@@ -52,7 +52,7 @@ public class Zone {
         .y(360617)
         .z(20)
         .server("geoserver")
-        .layer("Hauts-de-seine_Département_2023_5cm")
+        .layer("Hauts-de-seine_Département_2023_20cm")
         .shiftNb(0)
         .isCropped(true)
         .latitude(48.88417099999999)

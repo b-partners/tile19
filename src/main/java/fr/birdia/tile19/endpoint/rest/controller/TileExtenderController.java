@@ -32,6 +32,8 @@ public class TileExtenderController {
     int z = body.getZ();
     double lat = body.getLatitude();
     double lon = body.getLongitude();
+    String direction = String.valueOf(body.getShiftDirection());
+    String shiftDirection = direction == null ? "RIGHT_LEFT_SIDE" : direction;
 
     String base64Encoded =
         imageExtenderService.process(
@@ -41,6 +43,7 @@ public class TileExtenderController {
             body.getServer(),
             body.getLayer(),
             body.getShiftNb(),
+            shiftDirection,
             body.isCropped(),
             body.getLatitude(),
             body.getLongitude());

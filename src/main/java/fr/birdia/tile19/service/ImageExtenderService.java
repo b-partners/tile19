@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
@@ -54,6 +55,7 @@ public class ImageExtenderService {
       String server,
       String layer,
       int shiftNb,
+      String shiftDirection,
       boolean isCropped,
       double lat,
       double lon)
@@ -80,9 +82,14 @@ public class ImageExtenderService {
           centerImageOnPoint(image, (int) pixelCoords[0], (int) pixelCoords[1], cropSize);
 
       return convertImageToBase64(cropped);
-    } else if (shiftNb != 0) {
+    } else if (shiftNb != 0 && Objects.equals(shiftDirection, "RIGHT_LEFT_SIDE")) {
       this.x2 += shiftNb;
       this.x1 += shiftNb;
+
+      return downloadTilesBytesAndConvertToBase64(z, server, layer);
+    } else if (shiftNb != 0 && Objects.equals(shiftDirection, "UP_DOWN_SIDE")) {
+      this.y2 += shiftNb;
+      this.y1 += shiftNb;
 
       return downloadTilesBytesAndConvertToBase64(z, server, layer);
     }
