@@ -29,16 +29,70 @@ public class ImageExtenderServiceTest {
   public void full_herault_image_extension_ok() throws Exception {
     String base64Result =
         extender.process(
-            533789, 383778, 20, "geoserver", "HERAULT_2020_5cm", 0, false, 43.3804375, 3.2621094);
+            533789,
+            383778,
+            20,
+            "geoserver",
+            "HERAULT_2020_5cm",
+            0,
+            "RIGHT_LEFT_SIDE",
+            false,
+            43.3804375,
+            3.2621094);
 
     image_extension_assertion(base64Result, "herault_full_image_extended.jpg");
+  }
+
+  @Test
+  public void full_dijon_image_extension_shifted_down_ok() throws Exception {
+    String base64Result =
+        extender.process(
+            538969,
+            367435,
+            20,
+            "geoserver",
+            "COTE_D_OR_2022_5cm",
+            1,
+            "UP_DOWN_SIDE",
+            false,
+            47.3212601,
+            5.040525);
+
+    image_extension_assertion(base64Result, "dijon_shifted_down.jpg");
+  }
+
+  @Test
+  public void full_dijon_image_extension_shifted_up_ok() throws Exception {
+    String base64Result =
+        extender.process(
+            538969,
+            367435,
+            20,
+            "geoserver",
+            "COTE_D_OR_2022_5cm",
+            -1,
+            "UP_DOWN_SIDE",
+            false,
+            47.3212601,
+            5.040525);
+
+    image_extension_assertion(base64Result, "dijon_shifted_up.jpg");
   }
 
   @Test
   public void full_dijon_image_extension_ok() throws Exception {
     String base64Result =
         extender.process(
-            538969, 367435, 20, "geoserver", "COTE_D_OR_2022_5cm", 0, false, 47.3212601, 5.040525);
+            538969,
+            367435,
+            20,
+            "geoserver",
+            "COTE_D_OR_2022_5cm",
+            0,
+            "UP_DOWN_SIDE",
+            false,
+            47.3212601,
+            5.040525);
 
     image_extension_assertion(base64Result, "dijon_full_image_extended.jpg");
   }
@@ -53,6 +107,7 @@ public class ImageExtenderServiceTest {
             "geoserver",
             "Auvergne_Rhone_Alpes_All_Region_5cm",
             0,
+            "RIGHT_LEFT_SIDE",
             false,
             44.9120193,
             4.9125046);
@@ -70,6 +125,7 @@ public class ImageExtenderServiceTest {
             "geoserver",
             "Auvergne_Rhone_Alpes_All_Region_5cm",
             0,
+            "RIGHT_LEFT_SIDE",
             true,
             44.9120193,
             4.9125046);
@@ -87,6 +143,7 @@ public class ImageExtenderServiceTest {
             "geoserver",
             "Auvergne_Rhone_Alpes_All_Region_5cm",
             -2,
+            "RIGHT_LEFT_SIDE",
             false,
             44.9120193,
             4.9125046);
@@ -104,6 +161,7 @@ public class ImageExtenderServiceTest {
             "geoserver",
             "Auvergne_Rhone_Alpes_All_Region_5cm",
             2,
+            "RIGHT_LEFT_SIDE",
             false,
             44.9120193,
             4.9125046);

@@ -14,6 +14,13 @@ public class TileExtenderRequestBody {
   private String server;
   private String layer;
   private int shiftNb;
+  private ShiftDirection shiftDirection;
+
+  public enum ShiftDirection {
+    RIGHT_LEFT_SIDE,
+    UP_DOWN_SIDE
+  }
+
   private boolean isCropped;
   private double latitude;
   private double longitude;
