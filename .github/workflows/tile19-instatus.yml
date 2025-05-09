@@ -24,7 +24,7 @@ jobs:
 
       - name: Run geoserver availability test
         run: |
-          response=$(curl -s -o response.json -w "%{http_code}" -X POST "https://ifdovpj3xe.execute-api.eu-west-3.amazonaws.com" \
+          response=$(curl -s -o response.json -w "%{http_code}" -X POST "https://ifdovpj3xe.execute-api.eu-west-3.amazonaws.com/extend" \
             -H "Content-Type: application/json" \
             --data-binary "@.github/workflows/tile19-request-body.json")
 
