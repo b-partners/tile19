@@ -17,17 +17,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Restore cache
+        id: restore_cache
+        uses: actions/cache@v4
+        with:
+          path: incident_id.txt
+          key: incident-id-cache
+          restore-keys: |
+            incident-id-cache
+
       - name: Read cached incident ID
         run: |
           if [ -f incident_id.txt ]; then
             incident_id=$(cat incident_id.txt)
             echo "incident_id=$incident_id" >> $GITHUB_ENV
             echo "Restored incident_id from cache: '$incident_id'"
+            echo "resolve_incident=true" >> $GITHUB_ENV
           else
             echo "No incident_id.txt found in cache."
           fi
 
       - name: Monitor tile19 availability
+        id: check_tile
         run: |
           echo "Checking image availability..."
           response=$(curl -s -o response.json -w "%{http_code}" -X POST "https://ifdovpj3xe.execute-api.eu-west-3.amazonaws.com/extend" \
@@ -44,30 +55,37 @@ jobs:
               -H "Authorization: Bearer $API_KEY" \
               -d '{}')
 
-            echo "$instatus_response"
+            echo "instatus_response: $instatus_response"
 
             incident_id=$(echo "$instatus_response" | jq -r '.id')
             echo "$incident_id" > incident_id.txt
             echo "incident_id=$incident_id" >> $GITHUB_ENV
-            echo "should_cache_incident_id=true" >> $GITHUB_ENV
-            echo "Retrieved and saved incident_id: '$incident_id'"
+            echo "should_cache=true" >> $GITHUB_ENV
+            echo "resolve_incident=false" >> $GITHUB_ENV
 
-            exit 1
           fi
 
-          if [ -n "${{ env.incident_id }}" ]; then
-            echo "Send resolved incident to Instatus..."
-            curl -s -X POST "https://api.instatus.com/v2/${INSTATUS_PAGE_ID}/incidents/${{ env.incident_id }}/incident-updates/${INSTATUS_AVAILABLE_IMAGE_TEMPLATE_ID}" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $API_KEY" \
-              -d '{}'
-          else
-            echo "No existing incident_id found to update."
-          fi
-
-      - name: Cache incident_id for next run
-        if: env.should_cache_incident_id == 'true'
+      - name: Save incident_id.txt to cache
+        if: ${{ env.should_cache == 'true' }}
         uses: actions/cache@v4
         with:
           path: incident_id.txt
-          key: incident_id-${{ github.sha }}
+          key: incident-id-cache
+
+      - name: Send resolved incident to Instatus
+        if: ${{ env.resolve_incident=='true' }}
+        run: |
+          if [ -f incident_id.txt ]; then
+            incident_id=$(cat incident_id.txt)
+            echo "Updating and resolve incident_id: $incident_id on Instatus..."
+
+            curl -s -X POST "https://api.instatus.com/v2/${INSTATUS_PAGE_ID}/incidents/${incident_id}/incident-updates/${INSTATUS_AVAILABLE_IMAGE_TEMPLATE_ID}" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $API_KEY" \
+              -d '{}'
+
+            echo "Removing cached incident ID..."
+            rm incident_id.txt
+          else
+            echo "No existing incident_id.txt found to update."
+          fi
