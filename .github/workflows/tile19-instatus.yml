@@ -17,8 +17,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read cached incident ID
+        run: |
+          if [ -f incident_id.txt ]; then
+            incident_id=$(cat incident_id.txt)
+            echo "incident_id=$incident_id" >> $GITHUB_ENV
+            echo "Restored incident_id from cache: '$incident_id'"
+          else
+            echo "No incident_id.txt found in cache."
+          fi
+
       - name: Monitor tile19 availability
         run: |
+          echo "Checking image availability..."
           response=$(curl -s -o response.json -w "%{http_code}" -X POST "https://ifdovpj3xe.execute-api.eu-west-3.amazonaws.com/extend" \
             -H "Content-Type: application/json" \
             --data-binary "@.github/workflows/tile19-request-body.json")
@@ -28,23 +39,35 @@ jobs:
           if [ "$response" -ne 200 ]; then
             echo "Image retrieval failed, creating incident on Instatus..."
 
-            instatus_response=$(curl -s -X POST "https://api.instatus.com/v1/${{ env.INSTATUS_PAGE_ID }}/incidents/${{ env.INSTATUS_UNAVAILABLE_IMAGE_TEMPLATE_ID }}" \
+            instatus_response=$(curl -s -X POST "https://api.instatus.com/v1/${INSTATUS_PAGE_ID}/incidents/${INSTATUS_UNAVAILABLE_IMAGE_TEMPLATE_ID}" \
               -H "Content-Type: application/json" \
-              -H "Authorization: Bearer ${{ env.API_KEY }}" \
+              -H "Authorization: Bearer $API_KEY" \
               -d '{}')
-            
+
             echo "$instatus_response"
-          
+
             incident_id=$(echo "$instatus_response" | jq -r '.id')
             echo "$incident_id" > incident_id.txt
             echo "incident_id=$incident_id" >> $GITHUB_ENV
-            echo "Retrieved incident_id: '$incident_id'"
+            echo "should_cache_incident_id=true" >> $GITHUB_ENV
+            echo "Retrieved and saved incident_id: '$incident_id'"
+
             exit 1
           fi
 
-          curl -s -X POST "https://api.instatus.com/v1/${{ env.INSTATUS_PAGE_ID }}/incidents/${{ env.INSTATUS_AVAILABLE_IMAGE_TEMPLATE_ID }}" \
+          if [ -n "${{ env.incident_id }}" ]; then
+            echo "Send resolved incident to Instatus..."
+            curl -s -X POST "https://api.instatus.com/v2/${INSTATUS_PAGE_ID}/incidents/${{ env.incident_id }}/incident-updates/${INSTATUS_AVAILABLE_IMAGE_TEMPLATE_ID}" \
               -H "Content-Type: application/json" \
-              -H "Authorization: Bearer ${{ env.API_KEY }}" \
+              -H "Authorization: Bearer $API_KEY" \
               -d '{}'
-          
-          echo "Image retrieval succeeded, reporting availability to Instatus..."
+          else
+            echo "No existing incident_id found to update."
+          fi
+
+      - name: Cache incident_id for next run
+        if: env.should_cache_incident_id == 'true'
+        uses: actions/cache@v4
+        with:
+          path: incident_id.txt
+          key: incident_id-${{ github.sha }}
