@@ -1,0 +1,57 @@
+name: Tile19-instatus
+
+on:
+  push:
+    branches:
+      - "preprod"
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+env:
+  API_KEY: ${{ secrets.INSTATUS_API_KEY }}
+  INSTATUS_PAGE_ID: ${{ secrets.INSTATUS_PAGE_ID }}
+  INSTATUS_UNAVAILABLE_IMAGE_TEMPLATE_ID: ${{ secrets.INSTATUS_UNAVAILABLE_IMAGE_TEMPLATE_ID }}
+  INSTATUS_AVAILABLE_IMAGE_TEMPLATE_ID: ${{ secrets.INSTATUS_AVAILABLE_IMAGE_TEMPLATE_ID }}
+
+jobs:
+  monitor-tile19-status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run geoserver availability test
+        run: |
+          response=$(curl -s -o response.json -w "%{http_code}" -X POST "https://ifdovpj3xe.execute-api.eu-west-3.amazonaws.com" \
+            -H "Content-Type: application/json" \
+            --data-binary "@.github/workflows/tile19-request-body.json")
+
+          echo "Status code: $response"
+
+          if [ "$response" -ne 200 ]; then
+            echo "Image retrieval failed, creating incident on Instatus..."
+
+            instatus_response=$(curl -s -X POST "https://api.instatus.com/v1/${{ env.INSTATUS_PAGE_ID }}/incidents/${{ env.INSTATUS_UNAVAILABLE_IMAGE_TEMPLATE_ID }}" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer ${{ env.API_KEY }}" \
+              -d '{}')
+            
+            echo "$instatus_response"
+          
+            incident_id=$(echo "$instatus_response" | jq -r '.id')
+            echo "$incident_id" > incident_id.txt
+            echo "incident_id=$incident_id" >> $GITHUB_ENV
+            echo "Retrieved incident_id: '$incident_id'"
+            exit 1
+          fi
+
+          echo "Image retrieval succeeded, reporting availability to Instatus..."
+
+          curl -s -X POST "https://api.instatus.com/v1/${{ env.INSTATUS_PAGE_ID }}/incidents/${{ env.INSTATUS_AVAILABLE_IMAGE_TEMPLATE_ID }}" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer ${{ env.API_KEY }}" \
+              -d '{}'
+
+          echo "Successfully generated image"

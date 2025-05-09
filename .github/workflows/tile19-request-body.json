@@ -1,0 +1,11 @@
+{
+  "x": 528236 ,
+  "y": 381218,
+  "z": 20,
+  "server": "geoserver",
+  "layer":  "TARN-ET-GARONNE_2020_5CM",
+  "shiftNb": 0,
+  "isCropped": true,
+  "latitude": 44.01599909999999,
+  "longitude": 1.355471
+}
