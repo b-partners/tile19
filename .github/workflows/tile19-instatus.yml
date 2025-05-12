@@ -22,9 +22,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: incident_id.txt
-          key: incident-id-cache
+          key: incident-id-cache-${{ github.sha }}
           restore-keys: |
-            incident-id-cache
+            incident-id-cache-
 
       - name: Read cached incident ID
         run: |
@@ -34,12 +34,13 @@ jobs:
             echo "Restored incident_id from cache: '$incident_id'"
             echo "resolve_incident=true" >> $GITHUB_ENV
           else
+            echo "resolve_incident=false" >> $GITHUB_ENV
             echo "No incident_id.txt found in cache."
           fi
 
       - name: Launch tile19 test
         run: |
-          echo "Lancement des tests Tile19 à partir du fichier JSON..."
+          echo "Checking image availability on tile19..."
           test_status="OK"
 
           jq -c '.[]' .github/workflows/tile19-request-body.json | while read -r request_body; do
@@ -53,7 +54,6 @@ jobs:
             http_code=$(echo "$response" | tail -n1)
 
             echo "Code HTTP : $http_code"
-            echo "Réponse : $body"
 
             if [ "$http_code" -ne 200 ]; then
               echo "Request failed with body:"
@@ -65,57 +65,45 @@ jobs:
           done
 
           echo "test_status=$test_status" >> $GITHUB_ENV
-          echo "Statut global des tests : $test_status"
+          echo "Global test status : $test_status"
 
       - name: Monitor tile19 availability
-        id: check_tile
+        if: ${{ env.test_status == 'KO' }}
         run: |
-          echo "Checking image availability..."
-          response=$(curl -s -o response.json -w "%{http_code}" -X POST "https://ifdovpj3xe.execute-api.eu-west-3.amazonaws.com/extend" \
+          echo "Image retrieval failed, creating incident on Instatus..."
+          
+          instatus_response=$(curl -s -X POST "https://api.instatus.com/v1/${INSTATUS_PAGE_ID}/incidents/${INSTATUS_UNAVAILABLE_IMAGE_TEMPLATE_ID}" \
             -H "Content-Type: application/json" \
-            --data-binary "@.github/workflows/tarn-garonne-body.json")
+            -H "Authorization: Bearer $API_KEY" \
+            -d '{}')
 
-          echo "Status code: $response"
+          echo "instatus_response: $instatus_response"
 
-          if [ "$response" -ne 200 ]; then
-            echo "Image retrieval failed, creating incident on Instatus..."
-
-            instatus_response=$(curl -s -X POST "https://api.instatus.com/v1/${INSTATUS_PAGE_ID}/incidents/${INSTATUS_UNAVAILABLE_IMAGE_TEMPLATE_ID}" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $API_KEY" \
-              -d '{}')
-
-            echo "instatus_response: $instatus_response"
-
-            incident_id=$(echo "$instatus_response" | jq -r '.id')
-            echo "$incident_id" > incident_id.txt
-            echo "incident_id=$incident_id" >> $GITHUB_ENV
-            echo "should_cache=true" >> $GITHUB_ENV
-            echo "resolve_incident=false" >> $GITHUB_ENV
-
-          fi
+          incident_id=$(echo "$instatus_response" | jq -r '.id')
+          echo "$incident_id" > incident_id.txt
+          echo "incident_id=$incident_id" >> $GITHUB_ENV
+          echo "should_cache=true" >> $GITHUB_ENV
+          echo "resolve_incident=false" >> $GITHUB_ENV
 
       - name: Save incident_id.txt to cache
         if: ${{ env.should_cache == 'true' }}
         uses: actions/cache@v4
         with:
           path: incident_id.txt
-          key: incident-id-cache
+          key: incident-id-cache-${{ github.sha }}
 
       - name: Send resolved incident to Instatus
         if: ${{ env.resolve_incident=='true' }}
         run: |
           if [ -f incident_id.txt ]; then
             incident_id=$(cat incident_id.txt)
-            echo "Updating and resolve incident_id: $incident_id on Instatus..."
+            echo "Updating and resolving incident_id: $incident_id on Instatus..."
 
             curl -s -X POST "https://api.instatus.com/v2/${INSTATUS_PAGE_ID}/incidents/${incident_id}/incident-updates/${INSTATUS_AVAILABLE_IMAGE_TEMPLATE_ID}" \
               -H "Content-Type: application/json" \
               -H "Authorization: Bearer $API_KEY" \
               -d '{}'
 
-            echo "Removing cached incident ID..."
-            rm incident_id.txt
           else
             echo "No existing incident_id.txt found to update."
           fi
