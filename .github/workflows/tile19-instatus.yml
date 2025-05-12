@@ -37,13 +37,43 @@ jobs:
             echo "No incident_id.txt found in cache."
           fi
 
+      - name: Launch tile19 test
+        run: |
+          echo "Lancement des tests Tile19 à partir du fichier JSON..."
+          test_status="OK"
+
+          jq -c '.[]' .github/workflows/tile19-request-body.json | while read -r request_body; do
+            echo "Request body: $request_body"
+
+            response=$(curl -s -w "\n%{http_code}" -X POST "https://ifdovpj3xe.execute-api.eu-west-3.amazonaws.com/extend" \
+              -H "Content-Type: application/json" \
+              --data "$request_body")
+
+            body=$(echo "$response" | sed '$d')
+            http_code=$(echo "$response" | tail -n1)
+
+            echo "Code HTTP : $http_code"
+            echo "Réponse : $body"
+
+            if [ "$http_code" -ne 200 ]; then
+              echo "Request failed with body:"
+              echo "$request_body"
+              test_status="KO"
+            fi
+
+            echo "-------------------------------------------"
+          done
+
+          echo "test_status=$test_status" >> $GITHUB_ENV
+          echo "Statut global des tests : $test_status"
+
       - name: Monitor tile19 availability
         id: check_tile
         run: |
           echo "Checking image availability..."
           response=$(curl -s -o response.json -w "%{http_code}" -X POST "https://ifdovpj3xe.execute-api.eu-west-3.amazonaws.com/extend" \
             -H "Content-Type: application/json" \
-            --data-binary "@.github/workflows/tile19-request-body.json")
+            --data-binary "@.github/workflows/tarn-garonne-body.json")
 
           echo "Status code: $response"
 
