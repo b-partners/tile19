@@ -59,7 +59,7 @@ public class TileExtenderController {
     return ResponseEntity.ok().contentType(TEXT_PLAIN).headers(headers).body(base64Encoded);
   }
 
-  @PutMapping(path = "/extend/existing-tiles", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(path = "/extend/existing-tiles", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> extendExistingTiles(
       @RequestPart("file1") MultipartFile file1,
       @RequestPart("file2") MultipartFile file2,

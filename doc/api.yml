@@ -49,7 +49,7 @@ paths:
                 format: base64
                 description: Base64-encoded image
   /extend/existing-tiles:
-    put:
+    post:
       description: Extend tile from existing tiles
       operationId: extendExistingTiles
       tags:
