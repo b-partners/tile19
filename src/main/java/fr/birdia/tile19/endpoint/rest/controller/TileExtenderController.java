@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 @Controller
@@ -60,15 +61,15 @@ public class TileExtenderController {
 
   @PutMapping(path = "/extend/existing-tiles", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> extendExistingTiles(
-      @RequestParam("file1") MultipartFile file1,
-      @RequestParam("file2") MultipartFile file2,
-      @RequestParam("file3") MultipartFile file3,
-      @RequestParam("file4") MultipartFile file4,
-      @RequestParam("file5") MultipartFile file5,
-      @RequestParam("file6") MultipartFile file6,
-      @RequestParam("file7") MultipartFile file7,
-      @RequestParam("file8") MultipartFile file8,
-      @RequestParam("file9") MultipartFile file9)
+      @RequestPart("file1") MultipartFile file1,
+      @RequestPart("file2") MultipartFile file2,
+      @RequestPart("file3") MultipartFile file3,
+      @RequestPart("file4") MultipartFile file4,
+      @RequestPart("file5") MultipartFile file5,
+      @RequestPart("file6") MultipartFile file6,
+      @RequestPart("file7") MultipartFile file7,
+      @RequestPart("file8") MultipartFile file8,
+      @RequestPart("file9") MultipartFile file9)
       throws Exception {
 
     List<BufferedImage> images =
