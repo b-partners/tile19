@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: incident_id.txt
-          key: incident-id-cache-${{ github.sha }}
+          key: incident-id-cache-${{ github.run_id }}
           restore-keys: |
             incident-id-cache-
 
@@ -101,7 +101,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: incident_id.txt
-          key: incident-id-cache-${{ github.sha }}
+          key: incident-id-cache-${{ github.run_id }}
 
       - name: Send resolved incident to Instatus
         if: ${{ env.resolve_incident=='true' }}
