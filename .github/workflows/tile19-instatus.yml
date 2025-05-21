@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Restore cache
+      - name: Restore incident_id cache
         id: restore_cache
         uses: actions/cache@v4
         with:
@@ -27,6 +27,15 @@ jobs:
           key: incident-id-cache-${{ github.run_id }}
           restore-keys: |
             incident-id-cache-
+
+      - name: Restore resolved_incident_id cache
+        id: restore_resolved_incident_id_cache
+        uses: actions/cache@v4
+        with:
+          path: resolved_incident_id.txt
+          key: resolved-incident-id-cache-${{ github.run_id }}
+          restore-keys: |
+            resolved-incident-id-
 
       - name: Read cached incident ID
         run: |
@@ -38,6 +47,21 @@ jobs:
           else
             echo "resolve_incident=false" >> $GITHUB_ENV
             echo "No incident_id.txt found in cache."
+          fi
+
+      - name: Check if incident is already resolved
+        run: |
+          if [[ -f incident_id.txt && -f resolved_incident_id.txt ]]; then
+            incident_id=$(cat incident_id.txt)
+            resolved_id=$(cat resolved_incident_id.txt)
+
+            echo "incident_id: $incident_id"
+            echo "resolved_incident_id: $resolved_id"
+
+            if [ "$incident_id" = "$resolved_id" ]; then
+              echo "Incident already resolved. Skipping resolution."
+              echo "resolve_incident=false" >> $GITHUB_ENV
+            fi
           fi
 
       - name: Launch tile19 test
@@ -104,7 +128,7 @@ jobs:
           key: incident-id-cache-${{ github.run_id }}
 
       - name: Send resolved incident to Instatus
-        if: ${{ env.resolve_incident=='true' }}
+        if: ${{ env.resolve_incident == 'true' }}
         run: |
           if [ -f incident_id.txt ]; then
             incident_id=$(cat incident_id.txt)
@@ -114,7 +138,13 @@ jobs:
               -H "Content-Type: application/json" \
               -H "Authorization: Bearer $API_KEY" \
               -d '{}'
-
-          else
-            echo "No existing incident_id.txt found to update."
+          
+            echo "$incident_id" > resolved_incident_id.txt
           fi
+
+      - name: Save resolved_incident_id to cache
+        if: ${{ env.resolve_incident == 'true' }}
+        uses: actions/cache@v4
+        with:
+          path: resolved_incident_id.txt
+          key: resolved-incident-id-cache-${{ github.run_id }}
