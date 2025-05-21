@@ -28,15 +28,6 @@ jobs:
           restore-keys: |
             incident-id-cache-
 
-      - name: Restore resolved_incident_id cache
-        id: restore_resolved_incident_id_cache
-        uses: actions/cache@v4
-        with:
-          path: resolved_incident_id.txt
-          key: resolved-incident-id-cache-${{ github.run_id }}
-          restore-keys: |
-            resolved-incident-id-
-
       - name: Read cached incident ID
         run: |
           if [ -f incident_id.txt ]; then
@@ -47,21 +38,6 @@ jobs:
           else
             echo "resolve_incident=false" >> $GITHUB_ENV
             echo "No incident_id.txt found in cache."
-          fi
-
-      - name: Check if incident is already resolved
-        run: |
-          if [[ -f incident_id.txt && -f resolved_incident_id.txt ]]; then
-            incident_id=$(cat incident_id.txt)
-            resolved_id=$(cat resolved_incident_id.txt)
-
-            echo "incident_id: $incident_id"
-            echo "resolved_incident_id: $resolved_id"
-
-            if [ "$incident_id" = "$resolved_id" ]; then
-              echo "Incident already resolved. Skipping resolution."
-              echo "resolve_incident=false" >> $GITHUB_ENV
-            fi
           fi
 
       - name: Launch tile19 test
@@ -132,19 +108,24 @@ jobs:
         run: |
           if [ -f incident_id.txt ]; then
             incident_id=$(cat incident_id.txt)
-            echo "Updating and resolving incident_id: $incident_id on Instatus..."
+            echo "Checking status of incident_id: $incident_id on Instatus..."
 
-            curl -s -X POST "https://api.instatus.com/v2/${INSTATUS_PAGE_ID}/incidents/${incident_id}/incident-updates/${INSTATUS_AVAILABLE_IMAGE_TEMPLATE_ID}" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $API_KEY" \
-              -d '{}'
+            response=$(curl -s -X GET "https://api.instatus.com/v1/${INSTATUS_PAGE_ID}/incidents/${incident_id}" \
+              -H "Authorization: Bearer $API_KEY")
+
+            status=$(echo "$response" | jq -r '.status')
+
+            echo "Current incident status: $status"
+
+            if [ "$status" != "RESOLVED" ]; then
+              echo "Updating and resolving incident_id: $incident_id on Instatus..."
+
+              curl -s -X POST "https://api.instatus.com/v2/${INSTATUS_PAGE_ID}/incidents/${incident_id}/incident-updates/${INSTATUS_AVAILABLE_IMAGE_TEMPLATE_ID}" \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $API_KEY" \
+                -d '{}'
+            else
+              echo "Incident already resolved. Skipping update."
+            fi
           
-            echo "$incident_id" > resolved_incident_id.txt
           fi
-
-      - name: Save resolved_incident_id to cache
-        if: ${{ env.resolve_incident == 'true' }}
-        uses: actions/cache@v4
-        with:
-          path: resolved_incident_id.txt
-          key: resolved-incident-id-cache-${{ github.run_id }}
