@@ -82,19 +82,31 @@ jobs:
         if: ${{ env.test_status == 'KO' }}
         run: |
           echo "Image retrieval failed, creating incident on Instatus..."
-          
-          instatus_response=$(curl -s -X POST "https://api.instatus.com/v1/${INSTATUS_PAGE_ID}/incidents/${INSTATUS_UNAVAILABLE_IMAGE_TEMPLATE_ID}" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $API_KEY" \
-            -d '{}')
 
-          echo "instatus_response: $instatus_response"
+          cached_incident_id="${incident_id}"
 
-          incident_id=$(echo "$instatus_response" | jq -r '.id')
-          echo "$incident_id" > incident_id.txt
-          echo "incident_id=$incident_id" >> $GITHUB_ENV
-          echo "should_cache=true" >> $GITHUB_ENV
-          echo "resolve_incident=false" >> $GITHUB_ENV
+          response=$(curl -s -X GET "https://api.instatus.com/v1/${INSTATUS_PAGE_ID}/incidents/${cached_incident_id}" \
+            -H "Authorization: Bearer $API_KEY")
+
+          status=$(echo "$response" | jq -r '.status')
+          echo "Current incident status: $status"
+
+          if [ "$status" == "INVESTIGATING" ]; then
+            echo "Incident $cached_incident_id is still in INVESTIGATING state. Skipping creation."
+          else
+            instatus_response=$(curl -s -X POST "https://api.instatus.com/v1/${INSTATUS_PAGE_ID}/incidents/${INSTATUS_UNAVAILABLE_IMAGE_TEMPLATE_ID}" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $API_KEY" \
+              -d '{}')
+
+            echo "instatus_response: $instatus_response"
+
+            new_incident_id=$(echo "$instatus_response" | jq -r '.id')
+            echo "$new_incident_id" > incident_id.txt
+            echo "incident_id=$new_incident_id" >> $GITHUB_ENV
+            echo "should_cache=true" >> $GITHUB_ENV
+            echo "resolve_incident=false" >> $GITHUB_ENV
+          fi
 
       - name: Save incident_id.txt to cache
         if: ${{ env.should_cache == 'true' }}
