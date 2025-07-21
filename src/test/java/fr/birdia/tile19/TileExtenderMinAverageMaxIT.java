@@ -1,7 +1,7 @@
 package fr.birdia.tile19;
 
 import static fr.birdia.tile19.testdata.Zone.marnes;
-import static fr.birdia.tile19.testdata.Zone.pcrs_2;
+import static fr.birdia.tile19.testdata.Zone.parthenay_pcrs_2;
 import static fr.birdia.tile19.testdata.Zone.tarn_et_garonne;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -39,7 +39,7 @@ public class TileExtenderMinAverageMaxIT extends FacadeIT {
   @Test
   public void extend_parthenay_faster_image_ok() throws Exception {
     long start = System.currentTimeMillis();
-    ResponseEntity<String> response = tileExtenderController.extendImage(pcrs_2());
+    ResponseEntity<String> response = tileExtenderController.extendImage(parthenay_pcrs_2());
     long end = System.currentTimeMillis();
     long elapsedTime = end - start;
 

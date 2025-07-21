@@ -74,7 +74,7 @@ public class Zone {
         .build();
   }
 
-  public static TileExtenderRequestBody pcrs_2() {
+  public static TileExtenderRequestBody parthenay_pcrs_2() {
     return TileExtenderRequestBody.builder()
         .x(523561)
         .y(370293)
@@ -130,7 +130,7 @@ public class Zone {
         .build();
   }
 
-  public static TileExtenderRequestBody pcrs_3() {
+  public static TileExtenderRequestBody poitiers_pcrs_3() {
     return TileExtenderRequestBody.builder()
         .x(525247)
         .y(370664)
@@ -144,7 +144,8 @@ public class Zone {
         .build();
   }
 
-  public static TileExtenderRequestBody pcrs_4() {
+  //  Ille-et-vilaine, la-lande
+  public static TileExtenderRequestBody ille_et_vilaine_la_lande_pcrs_4() {
     return TileExtenderRequestBody.builder()
         .x(519350)
         .y(364086)
@@ -158,7 +159,7 @@ public class Zone {
         .build();
   }
 
-  public static TileExtenderRequestBody pcrs_5() {
+  public static TileExtenderRequestBody toulouse_pcrs_5() {
     return TileExtenderRequestBody.builder()
         .x(528422)
         .y(382932)
