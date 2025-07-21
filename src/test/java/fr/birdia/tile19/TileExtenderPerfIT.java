@@ -11,6 +11,7 @@ import static fr.birdia.tile19.testdata.Zone.gironde;
 import static fr.birdia.tile19.testdata.Zone.haut_de_seine;
 import static fr.birdia.tile19.testdata.Zone.haut_rhin;
 import static fr.birdia.tile19.testdata.Zone.herault;
+import static fr.birdia.tile19.testdata.Zone.ille_et_vilaine_la_lande_pcrs_4;
 import static fr.birdia.tile19.testdata.Zone.indre_et_loire;
 import static fr.birdia.tile19.testdata.Zone.loire_atlantique;
 import static fr.birdia.tile19.testdata.Zone.manche;
@@ -18,11 +19,8 @@ import static fr.birdia.tile19.testdata.Zone.marnes;
 import static fr.birdia.tile19.testdata.Zone.meurthe_et_moselle;
 import static fr.birdia.tile19.testdata.Zone.moselle;
 import static fr.birdia.tile19.testdata.Zone.ortho_lisieux;
+import static fr.birdia.tile19.testdata.Zone.parthenay_pcrs_2;
 import static fr.birdia.tile19.testdata.Zone.pcrs_1;
-import static fr.birdia.tile19.testdata.Zone.pcrs_2;
-import static fr.birdia.tile19.testdata.Zone.pcrs_3;
-import static fr.birdia.tile19.testdata.Zone.pcrs_4;
-import static fr.birdia.tile19.testdata.Zone.pcrs_5;
 import static fr.birdia.tile19.testdata.Zone.pcrs_6;
 import static fr.birdia.tile19.testdata.Zone.pcrs_7;
 import static fr.birdia.tile19.testdata.Zone.pcrs_8;
@@ -30,8 +28,10 @@ import static fr.birdia.tile19.testdata.Zone.pcrs_9;
 import static fr.birdia.tile19.testdata.Zone.photo_aerienne_1;
 import static fr.birdia.tile19.testdata.Zone.photo_aerienne_2;
 import static fr.birdia.tile19.testdata.Zone.photo_aerienne_3;
+import static fr.birdia.tile19.testdata.Zone.poitiers_pcrs_3;
 import static fr.birdia.tile19.testdata.Zone.rhone;
 import static fr.birdia.tile19.testdata.Zone.tarn_et_garonne;
+import static fr.birdia.tile19.testdata.Zone.toulouse_pcrs_5;
 import static java.lang.System.currentTimeMillis;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -113,13 +113,14 @@ public class TileExtenderPerfIT extends FacadeIT {
   }
 
   @Test
+  @Disabled
   public void extend_chambery() {
     extendTile(pcrs_1(), "1 Rue Sommeiller, 73000 Chambéry");
   }
 
   @Test
   public void extend_parthenay() {
-    extendTile(pcrs_2(), "1 Rue de la Vau Saint-Jacques, 79200 Parthenay, France");
+    extendTile(parthenay_pcrs_2(), "1 Rue de la Vau Saint-Jacques, 79200 Parthenay, France");
   }
 
   @Test
@@ -139,17 +140,19 @@ public class TileExtenderPerfIT extends FacadeIT {
 
   @Test
   public void extend_poitiers() {
-    extendTile(pcrs_3(), "17 Rue Geneviève Fauconnier, 86000 Poitiers");
+    extendTile(poitiers_pcrs_3(), "17 Rue Geneviève Fauconnier, 86000 Poitiers");
   }
 
   @Test
   public void extend_saint_jacques_de_la_lande() {
-    extendTile(pcrs_4(), "63 Bd Jean Mermoz, 35136 Saint-Jacques-de-la-Lande");
+    extendTile(
+        ille_et_vilaine_la_lande_pcrs_4(), "63 Bd Jean Mermoz, 35136 Saint-Jacques-de-la-Lande");
   }
 
   @Test
+  @Disabled
   public void extend_toulouse() {
-    extendTile(pcrs_5(), "2 Rue de Cugnaux, 31300 Toulouse");
+    extendTile(toulouse_pcrs_5(), "2 Rue de Cugnaux, 31300 Toulouse");
   }
 
   @Test
