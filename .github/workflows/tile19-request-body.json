@@ -339,5 +339,27 @@
     "isCropped": true,
     "latitude": 43.3804375,
     "longitude": 3.2621094
+  },
+  {
+    "x": 520171,
+    "y": 370265,
+    "z": 20,
+    "server": "geoserver",
+    "layer": "VENDEE_2025",
+    "shiftNb": 0,
+    "isCropped": true,
+    "latitude": 46.6585421,
+    "longitude": -1.413421
+  },
+  {
+    "x": 528872,
+    "y": 376430,
+    "z": 20,
+    "server": "geoserver",
+    "layer": "Correze",
+    "shiftNb": 0,
+    "isCropped": true,
+    "latitude": 45.18627619999999,
+    "longitude": 1.5738809
   }
 ]
