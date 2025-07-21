@@ -1,0 +1,79 @@
+name: Tile19-instatus
+
+on:
+  workflow_dispatch:
+
+env:
+  API_KEY: ${{ secrets.INSTATUS_API_KEY }}
+  INSTATUS_PAGE_ID: ${{ secrets.INSTATUS_PAGE_ID }}
+  INSTATUS_UNAVAILABLE_IMAGE_TEMPLATE_ID: ${{ secrets.INSTATUS_UNAVAILABLE_IMAGE_TEMPLATE_ID }}
+  INSTATUS_AVAILABLE_IMAGE_TEMPLATE_ID: ${{ secrets.INSTATUS_AVAILABLE_IMAGE_TEMPLATE_ID }}
+
+jobs:
+  monitor-tile19-status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore cache
+        id: restore_cache
+        uses: actions/cache@v4
+        with:
+          path: incident_id.txt
+          key: incident-id-cache-${{ github.sha }}
+          restore-keys: |
+            incident-id-cache-
+
+      - name: Read cached incident ID
+        run: |
+          if [ -f incident_id.txt ]; then
+            incident_id=$(cat incident_id.txt)
+            echo "incident_id=$incident_id" >> $GITHUB_ENV
+            echo "Restored incident_id from cache: '$incident_id'"
+            echo "resolve_incident=true" >> $GITHUB_ENV
+          else
+            echo "No incident_id.txt found in cache."
+          fi
+
+
+      - name: Monitor tile19 availability
+        id: check_tile
+        run: |
+          echo "Checking image availability..."
+          response=$(curl -s -o response.json -w "%{http_code}" -X POST "https://ifdovpj3xe.execute-api.eu-west-3.amazonaws.com/extend" \
+            -H "Content-Type: application/json" \
+            --data-binary "@.github/workflows/tarn-garonne-body.json")
+
+          echo "Status code: $response"
+
+          if [ "$response" -ne 200 ]; then
+            echo "Image retrieval failed, creating incident on Instatus..."
+
+            incident_id=new_id
+            echo "$incident_id" > incident_id.txt
+            echo "incident_id=$incident_id" >> $GITHUB_ENV
+            echo "should_cache=true" >> $GITHUB_ENV
+            echo "resolve_incident=false" >> $GITHUB_ENV
+          fi
+
+      - name: Save incident_id.txt to cache
+        if: ${{ env.should_cache == 'true' }}
+        uses: actions/cache@v4
+        with:
+          path: incident_id.txt
+          key: incident-id-cache-${{ github.sha }}
+
+      - name: Send resolved incident to Instatus
+        if: ${{ env.resolve_incident=='true' }}
+        run: |
+          if [ -f incident_id.txt ]; then
+            incident_id=$(cat incident_id.txt)
+            echo "Updating and resolving incident_id: $incident_id on Instatus..."
+
+            echo "Removing cached incident ID..."
+            rm incident_id.txt
+          else
+            echo "No existing incident_id.txt found to update."
+          fi

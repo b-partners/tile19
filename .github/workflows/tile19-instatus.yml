@@ -2,6 +2,8 @@ name: Tile19-instatus
 
 on:
   workflow_dispatch:
+  schedule:
+    - 'cron': '0 * * * *'
 
 env:
   API_KEY: ${{ secrets.INSTATUS_API_KEY }}
@@ -82,7 +84,7 @@ jobs:
           echo "Image retrieval failed, creating incident on Instatus..."
 
           cached_incident_id="${incident_id}"
-
+          echo "Cached incident id=${}"
           response=$(curl -s -X GET "https://api.instatus.com/v1/${INSTATUS_PAGE_ID}/incidents/${cached_incident_id}" \
             -H "Authorization: Bearer $API_KEY")
 
