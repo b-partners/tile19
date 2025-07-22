@@ -352,14 +352,14 @@
     "longitude": -1.413421
   },
   {
-    "x": 528872,
-    "y": 376430,
+    "x": 528746,
+    "y": 376587,
     "z": 20,
     "server": "geoserver",
     "layer": "Correze",
     "shiftNb": 0,
     "isCropped": true,
-    "latitude": 45.18627619999999,
-    "longitude": 1.5738809
+    "latitude": 45.148274984038416,
+    "longitude": 1.5308524747724486
   }
 ]
