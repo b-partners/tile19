@@ -122,6 +122,11 @@ components:
         shiftNb:
           type: integer
           description: Number of tiles to extend around the base tile
+        shiftDirection:
+          description: Describe the shift you would like to do up-down-left-right
+          enum:
+            - UP_DOWN_SIDE
+            - RIGHT_LEFT_SIDE
         isCropped:
           type: boolean
           description: Whether the resulting image should be cropped around the center
