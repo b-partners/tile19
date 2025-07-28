@@ -84,8 +84,8 @@ jobs:
           echo "Image retrieval failed, creating incident on Instatus..."
 
           cached_incident_id="${incident_id}"
-
-          if [ -n "$cached_incident_id" ]; then
+          
+          if [ -n "$cached_incident_id" ] && [ "$cached_incident_id" != "null" ]; then
             echo "Cached incident id=${cached_incident_id}"
             response=$(curl -s -X GET "https://api.instatus.com/v1/${INSTATUS_PAGE_ID}/incidents/${cached_incident_id}" \
               -H "Authorization: Bearer $API_KEY")
