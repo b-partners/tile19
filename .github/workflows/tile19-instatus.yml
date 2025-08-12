@@ -130,7 +130,7 @@ jobs:
           key: incident-id-cache-${{ github.run_id }}
 
       - name: Send resolved incident to Instatus
-        if: ${{ env.resolve_incident == 'true' }}
+        if: ${{ env.resolve_incident == 'true' && env.test_status == 'OK'}}
         run: |
           if [ -f incident_id.txt ]; then
             incident_id=$(cat incident_id.txt)
