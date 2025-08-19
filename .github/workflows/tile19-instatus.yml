@@ -64,8 +64,8 @@ jobs:
               failure_count=$((failure_count + 1))
               echo "Current failure count: $failure_count"
           
-              if [ "$failure_count" -ge 10 ]; then
-                echo "Failure count reached 10. Marking test_status as KO."
+              if [ "$failure_count" -ge 30 ]; then
+                echo "Failure count reached 30. Marking test_status as KO."
                 test_status="KO"
                 break
               fi

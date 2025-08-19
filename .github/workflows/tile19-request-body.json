@@ -361,5 +361,38 @@
     "isCropped": true,
     "latitude": 45.148274984038416,
     "longitude": 1.5308524747724486
+  },
+  {
+    "x": 528621,
+    "y": 362542,
+    "z": 20,
+    "server": "geoserver",
+    "layer": "Eur_Et_Loir_Chartres",
+    "shiftNb": 0,
+    "isCropped": true,
+    "latitude": 48.4476189,
+    "longitude": 1.4888447
+  },
+  {
+    "x": 519842,
+    "y": 372160,
+    "z": 20,
+    "server": "geoserver",
+    "layer": "ILE-DE-RE",
+    "shiftNb": 0,
+    "isCropped": true,
+    "latitude": 46.21685047591625,
+    "longitude": -1.5363819905567202
+  },
+  {
+    "x": 521301,
+    "y": 369346,
+    "z": 20,
+    "server": "geoserver",
+    "layer": "VENDEE_2025",
+    "shiftNb": 0,
+    "isCropped": true,
+    "latitude": 46.872999,
+    "longitude": -1.028453
   }
 ]
