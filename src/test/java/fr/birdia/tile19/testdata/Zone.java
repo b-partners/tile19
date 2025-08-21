@@ -159,13 +159,13 @@ public class Zone {
         .build();
   }
 
-  public static TileExtenderRequestBody toulouse_pcrs_5() {
+  public static TileExtenderRequestBody toulouse_haute_garonne() {
     return TileExtenderRequestBody.builder()
         .x(528422)
         .y(382932)
         .z(20)
         .server("geoserver")
-        .layer("cite:PCRS")
+        .layer("HAUTE-GARONNE_2022_5cm")
         .shiftNb(0)
         .isCropped(true)
         .latitude(43.5911671)
@@ -343,15 +343,15 @@ public class Zone {
 
   public static TileExtenderRequestBody finistere() {
     return TileExtenderRequestBody.builder()
-        .x(511227)
-        .y(362786)
+        .x(511226)
+        .y(362792)
         .z(20)
         .server("geoserver")
-        .layer("FINISTERE_2024_5cm")
+        .layer("FINISTERE_2023_5cm")
         .shiftNb(0)
         .isCropped(true)
-        .latitude(48.3922022)
-        .longitude(-4.483961)
+        .latitude(48.390914045789565)
+        .longitude(-4.4844818115234375)
         .build();
   }
 

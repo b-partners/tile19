@@ -31,7 +31,7 @@ import static fr.birdia.tile19.testdata.Zone.photo_aerienne_3;
 import static fr.birdia.tile19.testdata.Zone.poitiers_pcrs_3;
 import static fr.birdia.tile19.testdata.Zone.rhone;
 import static fr.birdia.tile19.testdata.Zone.tarn_et_garonne;
-import static fr.birdia.tile19.testdata.Zone.toulouse_pcrs_5;
+import static fr.birdia.tile19.testdata.Zone.toulouse_haute_garonne;
 import static java.lang.System.currentTimeMillis;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -150,9 +150,8 @@ public class TileExtenderPerfIT extends FacadeIT {
   }
 
   @Test
-  @Disabled
   public void extend_toulouse() {
-    extendTile(toulouse_pcrs_5(), "2 Rue de Cugnaux, 31300 Toulouse");
+    extendTile(toulouse_haute_garonne(), "2 Rue de Cugnaux, 31300 Toulouse");
   }
 
   @Test
