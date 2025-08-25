@@ -1,8 +1,10 @@
 name: Reboot geoserver instance
 
 on:
-  schedule:
-    - cron: "0 */2 * * *"
+  workflow_run:
+    workflows: [ "Tile19-instatus" ]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
