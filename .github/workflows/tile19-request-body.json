@@ -55,17 +55,6 @@
     "longitude": 7.7947998046875
   },
   {
-    "x": 536038,
-    "y": 358963,
-    "z": 20,
-    "server": "geoserver",
-    "layer": "MARNES_2018_5cm",
-    "shiftNb": 0,
-    "isCropped": true,
-    "latitude": 49.25637787913231,
-    "longitude": 4.0340423583984375
-  },
-  {
     "x": 542299,
     "y": 359591,
     "z": 20,
@@ -108,17 +97,6 @@
     "isCropped": true,
     "latitude": 43.548050434476295,
     "longitude": 4.681549072265625
-  },
-  {
-    "x": 530765,
-    "y": 360617,
-    "z": 20,
-    "server": "geoserver",
-    "layer": "Hauts-de-seine_Département_2023_20cm",
-    "shiftNb": 0,
-    "isCropped": true,
-    "latitude": 48.884359955871744,
-    "longitude": 2.2237014770507812
   },
   {
     "x": 524712,
@@ -220,17 +198,6 @@
     "longitude": 0.6972885131835938
   },
   {
-    "x": 538596,
-    "y": 377561,
-    "z": 20,
-    "server": "geoserver",
-    "layer": "Auvergne_Rhone_Alpes_All_Region_5cm",
-    "shiftNb": 0,
-    "isCropped": true,
-    "latitude": 44.91206116693208,
-    "longitude": 4.912261962890625
-  },
-  {
     "x": 528714,
     "y": 376585,
     "z": 20,
@@ -262,17 +229,6 @@
     "isCropped": true,
     "latitude": 48.447877550537115,
     "longitude": 1.4876174926757812
-  },
-  {
-    "x": 519842,
-    "y": 372160,
-    "z": 20,
-    "server": "geoserver",
-    "layer": "ILE-DE-RE",
-    "shiftNb": 0,
-    "isCropped": true,
-    "latitude": 46.21024960018722,
-    "longitude": -1.5264129638671875
   },
   {
     "x": 521301,
@@ -328,16 +284,5 @@
     "isCropped": true,
     "latitude": 50.02825490641211,
     "longitude": 2.4149322509765625
-  },
-  {
-    "x": 528707,
-    "y": 383116,
-    "z": 20,
-    "server": "geoserver",
-    "layer": "HAUTE-GARONNE_2022_5cm",
-    "shiftNb": 0,
-    "isCropped": true,
-    "latitude": 43.54556199065584,
-    "longitude": 1.5171432495117188
   }
 ]
