@@ -4,33 +4,11 @@
     "y": 374052,
     "z": 20,
     "server": "geoserver",
-    "layer": "RHONE_2018_5CM",
-    "shiftNb": 0,
-    "isCropped": true,
-    "latitude": 45.758900579534945,
-    "longitude": 4.830894470214844
-  },
-  {
-    "x": 538359,
-    "y": 374052,
-    "z": 20,
-    "server": "geoserver",
     "layer": "RHONE_2023_5CM",
     "shiftNb": 0,
     "isCropped": true,
     "latitude": 45.758900579534945,
     "longitude": 4.830894470214844
-  },
-  {
-    "x": 538969,
-    "y": 367435,
-    "z": 20,
-    "server": "geoserver",
-    "layer": "COTE_D_OR_2022_5cm",
-    "shiftNb": 0,
-    "isCropped": true,
-    "latitude": 47.32137056426739,
-    "longitude": 5.040321350097656
   },
   {
     "x": 538969,
@@ -114,17 +92,6 @@
     "y": 383094,
     "z": 20,
     "server": "geoserver",
-    "layer": "ALPES-MARITIMES_2020_5cm",
-    "shiftNb": 0,
-    "isCropped": true,
-    "latitude": 43.55103643145805,
-    "longitude": 7.020606994628906
-  },
-  {
-    "x": 544737,
-    "y": 383094,
-    "z": 20,
-    "server": "geoserver",
     "layer": "ALPES-MARITIMES_2024_5cm",
     "shiftNb": 0,
     "isCropped": true,
@@ -198,17 +165,6 @@
     "longitude": 0.32924652099609375
   },
   {
-    "x": 524765,
-    "y": 374065,
-    "z": 20,
-    "server": "geoserver",
-    "layer": "CHARENTE_2019_5cm",
-    "shiftNb": 0,
-    "isCropped": true,
-    "latitude": 45.755786613870285,
-    "longitude": 0.16376495361328125
-  },
-  {
     "x": 522490,
     "y": 377716,
     "z": 20,
@@ -218,17 +174,6 @@
     "isCropped": true,
     "latitude": 44.87436239539943,
     "longitude": -0.6172943115234375
-  },
-  {
-    "x": 533789,
-    "y": 383778,
-    "z": 20,
-    "server": "geoserver",
-    "layer": "HERAULT_2020_5cm",
-    "shiftNb": 0,
-    "isCropped": true,
-    "latitude": 43.380598530371415,
-    "longitude": 3.2619094848632812
   },
   {
     "x": 531072,

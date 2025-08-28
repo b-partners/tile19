@@ -60,6 +60,7 @@ public class TilesDownloaderService {
     params.put("transparent", "true");
     params.put("service", "WMS");
     params.put("request", "GetMap");
+    params.put("version", "2.20.2");
     return params;
   }
 
