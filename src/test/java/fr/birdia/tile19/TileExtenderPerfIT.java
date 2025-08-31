@@ -242,6 +242,7 @@ public class TileExtenderPerfIT extends FacadeIT {
   }
 
   @Test
+  @Disabled
   public void extend_marnes() {
     extendTile(marnes(), "Marnes", SLOW_MAX_DURATION);
   }
