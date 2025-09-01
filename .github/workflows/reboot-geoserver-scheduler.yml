@@ -1,10 +1,10 @@
 name: Reboot geoserver instance
 
 on:
-  workflow_run:
-    workflows: [ "Tile19-instatus" ]
-    types:
-      - completed
+#  workflow_run:
+#    workflows: [ "Tile19-instatus" ]
+#    types:
+#      - completed
   workflow_dispatch:
 
 jobs:
