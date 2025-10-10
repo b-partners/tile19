@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.imageio.ImageIO;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 @AllArgsConstructor
+@Slf4j
 public class TileExtenderController {
   private final ImageExtenderService imageExtenderService;
 
@@ -33,6 +35,8 @@ public class TileExtenderController {
     double lon = body.getLongitude();
     String direction = String.valueOf(body.getShiftDirection());
     String shiftDirection = direction == null ? "RIGHT_LEFT_SIDE" : direction;
+    boolean isOpaque = body.isOpaque();
+    log.info("isOpaque: {}", isOpaque);
 
     String base64Encoded =
         imageExtenderService.process(
@@ -45,7 +49,8 @@ public class TileExtenderController {
             shiftDirection,
             body.isCropped(),
             body.getLatitude(),
-            body.getLongitude());
+            body.getLongitude(),
+            isOpaque);
 
     double[] offsets = imageExtenderService.computeXYOffsets(lat, lon, x, y, z);
     HttpHeaders headers = new HttpHeaders();

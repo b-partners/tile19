@@ -3,6 +3,7 @@ package fr.birdia.tile19.service;
 import static fr.birdia.tile19.service.TilesDownloaderService.tileToLatLon;
 
 import fr.birdia.tile19.concurrency.Workers;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -33,12 +34,17 @@ public class ImageExtenderService {
   private Integer x2 = null;
   private Integer y2 = null;
   private Workers workers;
+  private ImageDegraderService imageDegraderService;
 
   public ImageExtenderService(
-      TilesDownloaderService downloader, TilesMergerService merger, Workers workers) {
+      TilesDownloaderService downloader,
+      TilesMergerService merger,
+      Workers workers,
+      ImageDegraderService imageDegraderService) {
     this.tileDownloader = downloader;
     this.tileMerger = merger;
     this.workers = workers;
+    this.imageDegraderService = imageDegraderService;
   }
 
   public double[] computeXYOffsets(double lat, double lon, int x, int y, int z) {
@@ -58,7 +64,8 @@ public class ImageExtenderService {
       String shiftDirection,
       boolean isCropped,
       double lat,
-      double lon)
+      double lon,
+      boolean isOpaque)
       throws Exception {
     this.x = x;
     this.y = y;
@@ -76,7 +83,8 @@ public class ImageExtenderService {
 
       double[] pixelCoords = convertCoordinatesToPixel(lat, lon, x, y, z);
       byte[] imageBytes =
-          downloadTilesBytes(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
+          downloadTilesBytes(
+              this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer, isOpaque);
       BufferedImage image = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
       BufferedImage cropped =
           centerImageOnPoint(image, (int) pixelCoords[0], (int) pixelCoords[1], cropSize);
@@ -86,14 +94,14 @@ public class ImageExtenderService {
       this.x2 += shiftNb;
       this.x1 += shiftNb;
 
-      return downloadTilesBytesAndConvertToBase64(z, server, layer);
+      return downloadTilesBytesAndConvertToBase64(z, server, layer, isOpaque);
     } else if (shiftNb != 0 && Objects.equals(shiftDirection, "UP_DOWN_SIDE")) {
       this.y2 += shiftNb;
       this.y1 += shiftNb;
 
-      return downloadTilesBytesAndConvertToBase64(z, server, layer);
+      return downloadTilesBytesAndConvertToBase64(z, server, layer, isOpaque);
     }
-    return downloadTilesBytesAndConvertToBase64(z, server, layer);
+    return downloadTilesBytesAndConvertToBase64(z, server, layer, isOpaque);
   }
 
   public String convertImageToBase64(BufferedImage image) throws IOException {
@@ -102,17 +110,28 @@ public class ImageExtenderService {
     return Base64.getEncoder().encodeToString(outputStream.toByteArray());
   }
 
-  public String downloadTilesBytesAndConvertToBase64(int z, String server, String layer)
-      throws IOException {
+  public String downloadTilesBytesAndConvertToBase64(
+      int z, String server, String layer, boolean isOpaque) throws IOException {
     byte[] imageBytes =
-        downloadTilesBytes(this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer);
+        downloadTilesBytes(
+            this.x, this.y, this.x1, this.x2, this.y1, this.y2, z, server, layer, isOpaque);
     BufferedImage image = ImageIO.read(new java.io.ByteArrayInputStream(imageBytes));
     return convertImageToBase64(image);
   }
 
   public byte[] downloadTilesBytes(
-      int x, int y, int x1, int x2, int y1, int y2, int z, String server, String layer)
+      int x,
+      int y,
+      int x1,
+      int x2,
+      int y1,
+      int y2,
+      int z,
+      String server,
+      String layer,
+      boolean isOpaque)
       throws IOException {
+
     BufferedImage[][] results = new BufferedImage[y2 - y1][x2 - x1];
     List<Callable<Void>> callables = new ArrayList<>();
 
@@ -136,12 +155,19 @@ public class ImageExtenderService {
 
     List<List<BufferedImage>> imgGrid =
         Arrays.stream(results).map(Arrays::asList).collect(Collectors.toList());
+    BufferedImage mergedImage = tileMerger.merge(imgGrid);
 
-    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-      BufferedImage mergedImage = tileMerger.merge(imgGrid);
-      ImageIO.write(mergedImage, "jpg", outputStream);
+    if (isOpaque) {
+      BufferedImage masked =
+          imageDegraderService.applyOpacityMask(mergedImage, 0.5f, new Color(255, 255, 255));
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      ImageIO.write(masked, "jpg", outputStream);
       return outputStream.toByteArray();
     }
+
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ImageIO.write(mergedImage, "jpg", outputStream);
+    return outputStream.toByteArray();
   }
 
   public String extendExistingTiles(List<BufferedImage> images) throws IOException {
