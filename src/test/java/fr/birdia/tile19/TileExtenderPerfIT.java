@@ -186,6 +186,7 @@ public class TileExtenderPerfIT extends FacadeIT {
   }
 
   @Test
+  @Disabled("server down")
   public void extend_ortho_lisieux() {
     extendTile(ortho_lisieux(), "Ortho Lisieux");
   }

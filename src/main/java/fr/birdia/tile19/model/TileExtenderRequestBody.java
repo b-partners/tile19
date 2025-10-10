@@ -24,4 +24,5 @@ public class TileExtenderRequestBody {
   private boolean isCropped;
   private double latitude;
   private double longitude;
+  private boolean isOpaque;
 }

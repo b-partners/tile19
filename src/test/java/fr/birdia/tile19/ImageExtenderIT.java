@@ -8,11 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import fr.birdia.tile19.conf.FacadeIT;
 import fr.birdia.tile19.endpoint.rest.controller.TileExtenderController;
 import fr.birdia.tile19.model.TileExtenderRequestBody;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +20,21 @@ import org.springframework.http.ResponseEntity;
 @Slf4j
 public class ImageExtenderIT extends FacadeIT {
   @Autowired TileExtenderController tileExtenderController;
+
+  public TileExtenderRequestBody degraded_body() {
+    return TileExtenderRequestBody.builder()
+        .x(538969)
+        .y(367435)
+        .z(20)
+        .server("geoserver")
+        .layer("COTE_D_OR_2022_5cm")
+        .shiftNb(0)
+        .isCropped(true)
+        .latitude(47.3212601)
+        .longitude(5.040525)
+        .isOpaque(true)
+        .build();
+  }
 
   public TileExtenderRequestBody body() {
     return TileExtenderRequestBody.builder()
@@ -126,6 +139,20 @@ public class ImageExtenderIT extends FacadeIT {
   }
 
   @Test
+  public void extend_not_full_HD_image_ok() throws Exception {
+    ResponseEntity<String> response = tileExtenderController.extendImage(degraded_body());
+    HttpHeaders headers = response.getHeaders();
+    double xOffset = Double.parseDouble(headers.getFirst("x_offset"));
+    double yOffset = Double.parseDouble(headers.getFirst("y_offset"));
+
+    assertEquals(1119.412271788272, xOffset);
+    assertEquals(994.7748578980581, yOffset);
+    assertNotNull(response);
+
+    Files.write(Paths.get("opaque-image.jpg"), Base64.getDecoder().decode(response.getBody()));
+  }
+
+  @Test
   public void extend_image_ok() throws Exception {
     ResponseEntity<String> response = tileExtenderController.extendImage(body());
     HttpHeaders headers = response.getHeaders();
@@ -143,19 +170,10 @@ public class ImageExtenderIT extends FacadeIT {
     HttpHeaders headers = response.getHeaders();
     double xOffset = Double.parseDouble(headers.getFirst("x_offset"));
     double yOffset = Double.parseDouble(headers.getFirst("y_offset"));
-    byte[] imageBytes = Base64.getDecoder().decode(response.getBody());
-    File ref =
-        new File(
-            Objects.requireNonNull(
-                    getClass().getResource("/lyon-shift-images/lyon_shifted_right.png"))
-                .getFile());
-    byte[] refBytes = Files.readAllBytes(ref.toPath());
 
     assertEquals(1119.412271788272, xOffset);
     assertEquals(994.7748578980581, yOffset);
     assertNotNull(response);
-
-    //    Files.write(Paths.get("lyon_shifted_right.png"), imageBytes);
   }
 
   @Test
@@ -170,7 +188,7 @@ public class ImageExtenderIT extends FacadeIT {
     assertEquals(994.7748578980581, yOffset);
     assertNotNull(response);
 
-    //    Files.write(Paths.get("lyon_shifted_left.png"), imageBytes);
+    //    Files.write(Paths.get("lyon_shifted_left.jpg"), imageBytes);
   }
 
   @Test
@@ -186,7 +204,7 @@ public class ImageExtenderIT extends FacadeIT {
 
     byte[] imageBytes = Base64.getDecoder().decode(response.getBody());
 
-    Files.write(Paths.get("output_shifted_down.png"), imageBytes);
+    Files.write(Paths.get("output_shifted_down.jpg"), imageBytes);
   }
 
   @Test
@@ -202,7 +220,7 @@ public class ImageExtenderIT extends FacadeIT {
 
     byte[] imageBytes = Base64.getDecoder().decode(response.getBody());
 
-    Files.write(Paths.get("output_shifted_up.png"), imageBytes);
+    Files.write(Paths.get("output_shifted_up.jpg"), imageBytes);
   }
 
   @Test

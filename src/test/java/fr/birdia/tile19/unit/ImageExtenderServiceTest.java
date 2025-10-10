@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import fr.birdia.tile19.concurrency.Workers;
+import fr.birdia.tile19.service.ImageDegraderService;
 import fr.birdia.tile19.service.ImageExtenderService;
 import fr.birdia.tile19.service.TilesDownloaderService;
 import fr.birdia.tile19.service.TilesMergerService;
@@ -23,7 +24,9 @@ public class ImageExtenderServiceTest {
   TilesDownloaderService downloader = new TilesDownloaderService(xyzToBBOXService);
   TilesMergerService merger = new TilesMergerService();
   Workers workers = new Workers();
-  ImageExtenderService extender = new ImageExtenderService(downloader, merger, workers);
+  ImageDegraderService imageDegrader = new ImageDegraderService();
+  ImageExtenderService extender =
+      new ImageExtenderService(downloader, merger, workers, imageDegrader);
 
   @Test
   public void full_herault_image_extension_ok() throws Exception {
@@ -38,7 +41,8 @@ public class ImageExtenderServiceTest {
             "RIGHT_LEFT_SIDE",
             false,
             43.3804375,
-            3.2621094);
+            3.2621094,
+            false);
 
     image_extension_assertion(base64Result, "herault_full_image_extended.jpg");
   }
@@ -56,7 +60,8 @@ public class ImageExtenderServiceTest {
             "UP_DOWN_SIDE",
             false,
             47.3212601,
-            5.040525);
+            5.040525,
+            false);
 
     image_extension_assertion(base64Result, "dijon_shifted_down.jpg");
   }
@@ -74,7 +79,8 @@ public class ImageExtenderServiceTest {
             "UP_DOWN_SIDE",
             false,
             47.3212601,
-            5.040525);
+            5.040525,
+            false);
 
     image_extension_assertion(base64Result, "dijon_shifted_up.jpg");
   }
@@ -92,7 +98,8 @@ public class ImageExtenderServiceTest {
             "UP_DOWN_SIDE",
             false,
             47.3212601,
-            5.040525);
+            5.040525,
+            false);
 
     image_extension_assertion(base64Result, "dijon_full_image_extended.jpg");
   }
@@ -110,7 +117,8 @@ public class ImageExtenderServiceTest {
             "RIGHT_LEFT_SIDE",
             false,
             44.9120193,
-            4.9125046);
+            4.9125046,
+            false);
 
     image_extension_assertion(base64Result, "auvergne_full_image_extended.jpg");
   }
@@ -128,7 +136,8 @@ public class ImageExtenderServiceTest {
             "RIGHT_LEFT_SIDE",
             true,
             44.9120193,
-            4.9125046);
+            4.9125046,
+            false);
 
     image_extension_assertion(base64Result, "test_output_cropped.jpg");
   }
@@ -146,7 +155,8 @@ public class ImageExtenderServiceTest {
             "RIGHT_LEFT_SIDE",
             false,
             44.9120193,
-            4.9125046);
+            4.9125046,
+            false);
 
     image_extension_assertion(base64Result, "test_shifted_left.jpg");
   }
@@ -164,7 +174,8 @@ public class ImageExtenderServiceTest {
             "RIGHT_LEFT_SIDE",
             false,
             44.9120193,
-            4.9125046);
+            4.9125046,
+            false);
 
     image_extension_assertion(base64Result, "test_shifted_right.jpg");
   }
