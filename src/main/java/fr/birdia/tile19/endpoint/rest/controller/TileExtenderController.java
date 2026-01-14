@@ -37,13 +37,14 @@ public class TileExtenderController {
     String shiftDirection = direction == null ? "RIGHT_LEFT_SIDE" : direction;
     boolean isOpaque = body.isOpaque();
     log.info("isOpaque: {}", isOpaque);
+    String server = body.getServer();
 
     String base64Encoded =
         imageExtenderService.process(
             x,
             y,
             z,
-            body.getServer(),
+            server,
             body.getLayer(),
             body.getShiftNb(),
             shiftDirection,
@@ -52,7 +53,7 @@ public class TileExtenderController {
             body.getLongitude(),
             isOpaque);
 
-    double[] offsets = imageExtenderService.computeXYOffsets(lat, lon, x, y, z);
+    double[] offsets = imageExtenderService.computeXYOffsets(lat, lon, x, y, z, server);
     HttpHeaders headers = new HttpHeaders();
     headers.add("x_offset", String.valueOf(offsets[0]));
     headers.add("y_offset", String.valueOf(offsets[1]));

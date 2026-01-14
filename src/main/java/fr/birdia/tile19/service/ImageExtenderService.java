@@ -47,11 +47,11 @@ public class ImageExtenderService {
     this.imageDegraderService = imageDegraderService;
   }
 
-  public double[] computeXYOffsets(double lat, double lon, int x, int y, int z) {
+  public double[] computeXYOffsets(double lat, double lon, int x, int y, int z, String server) {
     double[] pixelCoords = convertCoordinatesToPixel(lat, lon, x, y, z);
-    return new double[] {
-      pixelCoords[0] - 512, pixelCoords[1] - 512, pixelCoords[0], pixelCoords[1]
-    };
+    return server.equals("geoserver_ign")
+        ? new double[] {pixelCoords[0] - 128, pixelCoords[1] - 128, pixelCoords[0], pixelCoords[1]}
+        : new double[] {pixelCoords[0] - 512, pixelCoords[1] - 512, pixelCoords[0], pixelCoords[1]};
   }
 
   public String process(
