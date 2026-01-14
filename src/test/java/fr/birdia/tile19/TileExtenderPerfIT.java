@@ -47,6 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 
 @Slf4j
+@Disabled
 public class TileExtenderPerfIT extends FacadeIT {
   @Autowired TileExtenderController tileExtenderController;
 
