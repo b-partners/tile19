@@ -1,6 +1,9 @@
 package fr.birdia.tile19.service;
 
+import fr.birdia.tile19.model.airbus.AirbusProperties;
+import fr.birdia.tile19.service.airbus.AirbusPNEOService;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,10 +15,15 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.Objects;
 import javax.imageio.ImageIO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 @AllArgsConstructor
@@ -25,6 +33,8 @@ public class TilesDownloaderService {
   private final String IGN_BASE_URL = "https://data.geopf.fr/wmts";
   private final String GEOSERVER = "geoserver";
   private final XYZToBBOXService xyzToBBoxService;
+  private final AirbusPNEOService airbusPNEOService;
+  private RestTemplate restTemplate;
 
   static double[] tileToLatLon(int x, int y, int zoom) {
     int n = (int) Math.pow(2, zoom);
@@ -142,6 +152,28 @@ public class TilesDownloaderService {
       System.err.println("HTTP Error " + response.statusCode() + ": " + response.body());
     }
     return null;
+  }
+
+  public BufferedImage download(int xTile, int yTile, int zoom, AirbusProperties airbusProperties)
+      throws IOException {
+    HttpEntity<Void> wmtsEntityHeaders =
+        new HttpEntity<>(airbusPNEOService.customizeHeaders(airbusProperties.getBearer()));
+    String baseUrl = airbusProperties.getWmtsUrl();
+    String xyzUrl = String.format(baseUrl + "%d/%d/%d.png", zoom, xTile, yTile);
+    log.info("Process download on URL={}", xyzUrl);
+    ResponseEntity<byte[]> pneoImage =
+        restTemplate.exchange(xyzUrl, HttpMethod.GET, wmtsEntityHeaders, byte[].class);
+    log.info("Successfully retrieved image");
+    BufferedImage bufferedImage;
+    try (ByteArrayInputStream bis =
+        new ByteArrayInputStream(Objects.requireNonNull(pneoImage.getBody()))) {
+      bufferedImage = ImageIO.read(bis);
+    }
+    if (bufferedImage == null) {
+      throw new IllegalStateException(
+          "Could not decode image (unsupported format or corrupted data)");
+    }
+    return bufferedImage;
   }
 
   private void saveImageToFile(BufferedImage image, int xTile, int yTile, int zoom, String server)

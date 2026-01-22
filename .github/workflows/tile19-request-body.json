@@ -99,17 +99,6 @@
     "longitude": 4.681549072265625
   },
   {
-    "x": 524712,
-    "y": 359841,
-    "z": 20,
-    "server": "geoserver",
-    "layer": "Ortho_Lisieux_Normandie_2022",
-    "shiftNb": 0,
-    "isCropped": true,
-    "latitude": 49.05924487573084,
-    "longitude": 0.14556884765625
-  },
-  {
     "x": 519529,
     "y": 357258,
     "z": 20,
