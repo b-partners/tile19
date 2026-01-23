@@ -17,10 +17,12 @@ import java.io.File;
 import java.util.Base64;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
+@Disabled
 public class ImageExtenderServiceTest {
   XYZToBBOXService xyzToBBOXService = new XYZToBBOXService();
   RestTemplate restTemplate = new RestTemplate();

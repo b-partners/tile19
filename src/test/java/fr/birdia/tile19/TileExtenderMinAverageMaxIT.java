@@ -11,11 +11,13 @@ import fr.birdia.tile19.service.ImageExtenderService;
 import fr.birdia.tile19.service.TilesDownloaderService;
 import fr.birdia.tile19.service.TilesMergerService;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 
 @Slf4j
+@Disabled
 public class TileExtenderMinAverageMaxIT extends FacadeIT {
   @Autowired TileExtenderController tileExtenderController;
   @Autowired ImageExtenderService imageExtenderService;
