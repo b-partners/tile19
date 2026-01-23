@@ -19,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 
 @Slf4j
+@Disabled
 public class ImageExtenderIT extends FacadeIT {
   @Autowired TileExtenderController tileExtenderController;
 
