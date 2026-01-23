@@ -10,6 +10,7 @@ import fr.birdia.tile19.service.ImageExtenderService;
 import fr.birdia.tile19.service.TilesDownloaderService;
 import fr.birdia.tile19.service.TilesMergerService;
 import fr.birdia.tile19.service.XYZToBBOXService;
+import fr.birdia.tile19.service.airbus.AirbusPNEOService;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -17,16 +18,25 @@ import java.util.Base64;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 public class ImageExtenderServiceTest {
   XYZToBBOXService xyzToBBOXService = new XYZToBBOXService();
-  TilesDownloaderService downloader = new TilesDownloaderService(xyzToBBOXService);
+  RestTemplate restTemplate = new RestTemplate();
+  AirbusPNEOService airbusPNEOService =
+      new AirbusPNEOService(
+          restTemplate,
+          System.getenv("AIRBUS_AUTHENTICATION_BASEURL"),
+          System.getenv("AIRBUS_API_KEY"),
+          System.getenv("AIRBUS_SEARCHAPI_BASEURL"));
+  TilesDownloaderService downloader =
+      new TilesDownloaderService(xyzToBBOXService, airbusPNEOService, restTemplate);
   TilesMergerService merger = new TilesMergerService();
   Workers workers = new Workers();
   ImageDegraderService imageDegrader = new ImageDegraderService();
   ImageExtenderService extender =
-      new ImageExtenderService(downloader, merger, workers, imageDegrader);
+      new ImageExtenderService(downloader, merger, workers, imageDegrader, airbusPNEOService);
 
   @Test
   public void full_herault_image_extension_ok() throws Exception {

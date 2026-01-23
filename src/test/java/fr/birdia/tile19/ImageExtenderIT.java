@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -136,6 +137,32 @@ public class ImageExtenderIT extends FacadeIT {
         .latitude(43.3804375)
         .longitude(3.2621094)
         .build();
+  }
+
+  public TileExtenderRequestBody airbusBody() {
+    return TileExtenderRequestBody.builder()
+        .x(264242)
+        .y(191449)
+        .z(19)
+        .server("airbus")
+        .layer("PNEO")
+        .shiftNb(0)
+        .isCropped(true)
+        .latitude(43.599621309901735)
+        .longitude(1.4410986644024693)
+        .isOpaque(false)
+        .build();
+  }
+
+  @Test
+  @Disabled("Run locally")
+  public void extend_airbus_images_ok() throws Exception {
+    ResponseEntity<String> response = tileExtenderController.extendImage(airbusBody());
+
+    assertNotNull(response);
+
+    Files.write(
+        Paths.get("airbus-non-opaque-image.jpg"), Base64.getDecoder().decode(response.getBody()));
   }
 
   @Test

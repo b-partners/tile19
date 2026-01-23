@@ -4,15 +4,25 @@ import static org.junit.Assert.assertNotNull;
 
 import fr.birdia.tile19.service.TilesDownloaderService;
 import fr.birdia.tile19.service.XYZToBBOXService;
+import fr.birdia.tile19.service.airbus.AirbusPNEOService;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestTemplate;
 
 public class TilesDownloaderTest {
   XYZToBBOXService xyzToBBOXService = new XYZToBBOXService();
-  TilesDownloaderService tilesDownloaderService = new TilesDownloaderService(xyzToBBOXService);
+  RestTemplate restTemplate = new RestTemplate();
+  AirbusPNEOService airbusPNEOService =
+      new AirbusPNEOService(
+          restTemplate,
+          System.getenv("AIRBUS_AUTHENTICATION_BASEURL"),
+          System.getenv("AIRBUS_API_KEY"),
+          System.getenv("AIRBUS_SEARCHAPI_BASEURL"));
+  TilesDownloaderService tilesDownloaderService =
+      new TilesDownloaderService(xyzToBBOXService, airbusPNEOService, restTemplate);
 
   @Test
   public void tiles_downloader_geoserver_ok() throws IOException, InterruptedException {
@@ -21,7 +31,6 @@ public class TilesDownloaderTest {
     int zoom = 20;
     String server = "geoserver";
     String layer = "Bas-Rhin_2023_5cm";
-
     BufferedImage image =
         tilesDownloaderService.download(haguenauXtile, haguenauYTile, zoom, server, layer);
 
