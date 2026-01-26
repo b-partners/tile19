@@ -23,7 +23,7 @@ import org.springframework.http.ResponseEntity;
 public class ImageExtenderIT extends FacadeIT {
   @Autowired TileExtenderController tileExtenderController;
 
-  public TileExtenderRequestBody degraded_body() {
+  public TileExtenderRequestBody opaque_body() {
     return TileExtenderRequestBody.builder()
         .x(538969)
         .y(367435)
@@ -168,7 +168,7 @@ public class ImageExtenderIT extends FacadeIT {
 
   @Test
   public void extend_not_full_HD_image_ok() throws Exception {
-    ResponseEntity<String> response = tileExtenderController.extendImage(degraded_body());
+    ResponseEntity<String> response = tileExtenderController.extendImage(opaque_body());
     HttpHeaders headers = response.getHeaders();
     double xOffset = Double.parseDouble(headers.getFirst("x_offset"));
     double yOffset = Double.parseDouble(headers.getFirst("y_offset"));

@@ -39,6 +39,7 @@ public class ImageExtenderService {
   private Workers workers;
   private ImageDegraderService imageDegraderService;
   private AirbusPNEOService airbusPNEOService;
+  private AirbusProperties airbusProperties;
 
   public ImageExtenderService(
       TilesDownloaderService downloader,
@@ -51,6 +52,10 @@ public class ImageExtenderService {
     this.workers = workers;
     this.imageDegraderService = imageDegraderService;
     this.airbusPNEOService = airbusPNEOService;
+  }
+
+  public String getLastUpdatedAtAirbus() {
+    return this.airbusProperties.getUpdatedAt();
   }
 
   public double[] computeXYOffsets(double lat, double lon, int x, int y, int z, String server) {
@@ -146,8 +151,8 @@ public class ImageExtenderService {
     BufferedImage[][] results = new BufferedImage[y2 - y1][x2 - x1];
     List<Callable<Void>> callables = new ArrayList<>();
     final boolean isAirbusServer = AIRBUS_SERVER.equals(server);
-    final AirbusProperties airbusProperties =
-        isAirbusServer ? airbusPNEOService.retrieveAirbusWmtsLink(lat, lon) : null;
+    this.airbusProperties =
+        isAirbusServer ? airbusPNEOService.retrieveAirbusProperties(lat, lon) : null;
 
     for (int dy = y1; dy < y2; dy++) {
       for (int dx = x1; dx < x2; dx++) {

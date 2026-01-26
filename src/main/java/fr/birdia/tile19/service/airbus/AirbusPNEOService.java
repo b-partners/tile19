@@ -68,7 +68,7 @@ public class AirbusPNEOService {
     throw new IllegalArgumentException("Unable to retrieve Airbus Access Token");
   }
 
-  public AirbusProperties retrieveAirbusWmtsLink(double lat, double lon) {
+  public AirbusProperties retrieveAirbusProperties(double lat, double lon) {
     String bearerToken = authenticateAirbus();
     Geometry geometry = convertLatLonToGeometry(lat, lon);
     AirbusRequestBody requestBody =
@@ -95,7 +95,11 @@ public class AirbusPNEOService {
     String wmtsUrl =
         String.format(
             "%s/tiles/1.0.0/default/rgb/EPSG3857/", feature.getLinks().getWmts().getHref());
-    return AirbusProperties.builder().wmtsUrl(wmtsUrl).bearer(bearerToken).build();
+    return AirbusProperties.builder()
+        .wmtsUrl(wmtsUrl)
+        .updatedAt(feature.getProperties().getLastUpdateDate())
+        .bearer(bearerToken)
+        .build();
   }
 
   public Geometry convertLatLonToGeometry(double lat, double lon) {
