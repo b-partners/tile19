@@ -54,11 +54,19 @@ public class TileExtenderController {
             isOpaque);
 
     double[] offsets = imageExtenderService.computeXYOffsets(lat, lon, x, y, z, server);
+
     HttpHeaders headers = new HttpHeaders();
     headers.add("x_offset", String.valueOf(offsets[0]));
     headers.add("y_offset", String.valueOf(offsets[1]));
     headers.add("pointer_x", String.valueOf(offsets[2]));
     headers.add("pointer_y", String.valueOf(offsets[3]));
+    if (server.equals("airbus")) {
+      String lastUpdatedAt =
+          imageExtenderService.getLastUpdatedAtAirbus() != null
+              ? imageExtenderService.getLastUpdatedAtAirbus()
+              : "";
+      headers.add("airbusLastUpdatedAt", lastUpdatedAt);
+    }
 
     return ResponseEntity.ok().contentType(TEXT_PLAIN).headers(headers).body(base64Encoded);
   }

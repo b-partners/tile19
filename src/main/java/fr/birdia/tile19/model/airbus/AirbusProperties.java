@@ -8,4 +8,5 @@ import lombok.Data;
 public class AirbusProperties {
   private String wmtsUrl;
   private String bearer;
+  private String updatedAt;
 }
