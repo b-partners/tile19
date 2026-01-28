@@ -2,6 +2,8 @@ package fr.birdia.tile19.service.airbus;
 
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.birdia.tile19.model.airbus.AirbusAuthResponse;
 import fr.birdia.tile19.model.airbus.AirbusFeature;
 import fr.birdia.tile19.model.airbus.AirbusPNEOResponse;
@@ -68,7 +70,8 @@ public class AirbusPNEOService {
     throw new IllegalArgumentException("Unable to retrieve Airbus Access Token");
   }
 
-  public AirbusProperties retrieveAirbusProperties(double lat, double lon) {
+  public AirbusProperties retrieveAirbusProperties(double lat, double lon)
+      throws JsonProcessingException {
     String bearerToken = authenticateAirbus();
     Geometry geometry = convertLatLonToGeometry(lat, lon);
     AirbusRequestBody requestBody =
@@ -76,6 +79,7 @@ public class AirbusPNEOService {
             .constellation("PNEO")
             .workspace("public-pneo")
             .cloudCover("[0,10]")
+            .incidenceAngle("[0,25]")
             .itemsPerPage(10)
             .startPage(1)
             .processingLevel("SENSOR")
@@ -90,6 +94,12 @@ public class AirbusPNEOService {
 
     ResponseEntity<AirbusPNEOResponse> response =
         restTemplate.exchange(baseUrl.toUri(), HttpMethod.POST, entity, AirbusPNEOResponse.class);
+    ObjectMapper om = new ObjectMapper();
+
+    String incidenceAngle =
+        om.writeValueAsString(
+            response.getBody().getFeatures().getFirst().getProperties().getIncidenceAngle());
+    log.info("Coordinates [lat]={}, [lon]={}, Devers={}", lat, lon, incidenceAngle);
 
     AirbusFeature feature = Objects.requireNonNull(response.getBody()).getFeatures().getFirst();
     String wmtsUrl =

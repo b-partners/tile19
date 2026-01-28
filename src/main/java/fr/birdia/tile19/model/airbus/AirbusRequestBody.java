@@ -19,4 +19,5 @@ public class AirbusRequestBody {
   private String processingLevel;
   private String relation;
   private Geometry geometry;
+  private String incidenceAngle;
 }
