@@ -7,13 +7,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import fr.birdia.tile19.conf.FacadeIT;
 import fr.birdia.tile19.endpoint.rest.controller.TileExtenderController;
+import fr.birdia.tile19.model.CityTileTestCase;
 import fr.birdia.tile19.model.TileExtenderRequestBody;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -155,6 +159,15 @@ public class ImageExtenderIT extends FacadeIT {
         .build();
   }
 
+  @ParameterizedTest(name = "Download image for {0}")
+  @MethodSource("cityTileProvider")
+  public void extend_dijon(CityTileTestCase city) throws Exception {
+    log.info("Processing city={}", city.city());
+    TileExtenderRequestBody body = createTileExtenderRequestBodyFrom(city);
+    ResponseEntity<String> response = tileExtenderController.extendImage(body);
+    //    assertNotNull(response);
+  }
+
   @Test
   @Disabled("Run locally")
   public void extend_airbus_images_ok() throws Exception {
@@ -275,5 +288,51 @@ public class ImageExtenderIT extends FacadeIT {
 
     log.info("body={}", response.getBody());
     assertNotNull(response);
+  }
+
+  public TileExtenderRequestBody createTileExtenderRequestBodyFrom(
+      CityTileTestCase cityTileTestCase) {
+    String[] xyzTile = cityTileTestCase.xyzTile().split("_");
+
+    return TileExtenderRequestBody.builder()
+        .z(Integer.parseInt(xyzTile[0]))
+        .x(Integer.parseInt(xyzTile[1]))
+        .y(Integer.parseInt(xyzTile[2]))
+        .server("airbus")
+        .layer("PNEO")
+        .shiftNb(0)
+        .isCropped(false)
+        .latitude(cityTileTestCase.latitude())
+        .longitude(cityTileTestCase.longitude())
+        .build();
+  }
+
+  static Stream<CityTileTestCase> cityTileProvider() {
+    return Stream.of(
+        //        new CityTileTestCase("Dijon", 47.341749, 5.020057, "19_269454_183673"), // failed
+        new CityTileTestCase("Mans", 48.012534, 0.173570, "19_262396_182222"),
+        new CityTileTestCase("Mans", 48.018972, 0.179513, "19_262405_182208"),
+        new CityTileTestCase("Paris", 48.8566, 2.3522, "19_265242_180499"),
+        new CityTileTestCase("Nantes", 47.2184, -1.5536, "19_259881_183938"),
+        new CityTileTestCase("Lyon", 45.7640, 4.8357, "19_269186_187015"),
+        new CityTileTestCase("Lille", 50.6292, 3.0573, "19_266596_176374"),
+        new CityTileTestCase("Bordeaux", 44.8378, -0.5792, "19_261300_188933"),
+        new CityTileTestCase("Marseille", 43.2965, 5.3698, "19_269964_192057"),
+        new CityTileTestCase("Strasbourg", 48.5734, 7.7521, "19_273433_180995"),
+        //            //        new CityTileTestCase("Montpellier", 44.1194, 3.2319,
+        // "19_266850_190399"), // failed
+        new CityTileTestCase("Caen", 49.4431, 1.0993, "19_263744_179064"),
+        new CityTileTestCase("Grenoble", 45.1885, 5.7245, "19_270480_188210"),
+        new CityTileTestCase("Nîmes", 43.9352, 4.1023, "19_268118_190772"),
+        new CityTileTestCase("Perpignan", 42.6977, 2.8956, "19_266361_193249"),
+        new CityTileTestCase("Annecy", 46.2044, 6.1432, "19_271090_186092"),
+        //            ////        new CityTileTestCase("Cahors", 44.0140, 1.7043,
+        // "19_264626_190613"), // failed
+        new CityTileTestCase("Calais", 50.9513, 1.8587, "19_264850_175632"),
+        new CityTileTestCase("Rennes", 48.1173, -1.6778, "19_259700_181994"),
+        new CityTileTestCase("Orléans", 47.9029, 1.9093, "19_264924_182461"),
+        new CityTileTestCase("Angers", 47.4784, -0.5632, "19_261323_183379"),
+        new CityTileTestCase("Bayeux", 49.1829, -0.3700, "19_261605_179645"),
+        new CityTileTestCase("Nice", 43.7102, 7.2620, "19_272720_191226"));
   }
 }
