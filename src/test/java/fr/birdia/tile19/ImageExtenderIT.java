@@ -27,6 +27,22 @@ import org.springframework.http.ResponseEntity;
 public class ImageExtenderIT extends FacadeIT {
   @Autowired TileExtenderController tileExtenderController;
 
+  //  46.386617184543546, 5.86114453923984
+  public TileExtenderRequestBody ignBody() {
+    return TileExtenderRequestBody.builder()
+        .x(270679)
+        .y(185708)
+        .z(19)
+        .server("geoserver_ign")
+        .layer("FLUX_IGN_2023_20CM")
+        .shiftNb(0)
+        .isCropped(false)
+        .latitude(46.3864618)
+        .longitude(5.861166)
+        .isOpaque(false)
+        .build();
+  }
+
   public TileExtenderRequestBody opaque_body() {
     return TileExtenderRequestBody.builder()
         .x(538969)
@@ -152,11 +168,17 @@ public class ImageExtenderIT extends FacadeIT {
         .server("airbus")
         .layer("PNEO")
         .shiftNb(0)
-        .isCropped(true)
+        .isCropped(false)
         .latitude(43.599621309901735)
         .longitude(1.4410986644024693)
         .isOpaque(false)
         .build();
+  }
+
+  @Test
+  void test_ign_tile19() throws Exception {
+    ResponseEntity<String> response = tileExtenderController.extendImage(ignBody());
+    Files.write(Paths.get("ign-test-images"), Base64.getDecoder().decode(response.getBody()));
   }
 
   @ParameterizedTest(name = "Download image for {0}")

@@ -30,7 +30,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class TilesDownloaderService {
   private final String GEOSERVER_BASE_URL = "http://35.181.83.111/geoserver/cite/wms";
-  private final String IGN_BASE_URL = "https://data.geopf.fr/wmts";
+  private final String IGN_BASE_URL = "https://data.geopf.fr/wms-r/wms";
   private final String GEOSERVER = "geoserver";
   private final XYZToBBOXService xyzToBBoxService;
   private final AirbusPNEOService airbusPNEOService;
@@ -74,17 +74,19 @@ public class TilesDownloaderService {
     return params;
   }
 
-  private HashMap<String, String> configureIgnParams(int tileCol, int tileRow, int zoom) {
+  private HashMap<String, String> configureIgnParams(
+      double minX, double maxX, double minY, double maxY) {
     HashMap<String, String> params = new HashMap<>();
-    params.put("SERVICE", "WMTS");
-    params.put("REQUEST", "GetTile");
-    params.put("VERSION", "1.0.0");
-    params.put("LAYER", "ORTHOIMAGERY.ORTHOPHOTOS");
-    params.put("TILEMATRIXSET", "PM");
-    params.put("TILEMATRIX", String.valueOf(zoom));
-    params.put("TILECOL", String.valueOf(tileCol));
-    params.put("TILEROW", String.valueOf(tileRow));
-    params.put("STYLE", "normal");
+    params.put("SERVICE", "WMS");
+    params.put("REQUEST", "GetMap");
+    params.put("VERSION", "1.3.0");
+    params.put("LAYERS", "ORTHOIMAGERY.ORTHOPHOTOS");
+    params.put("STYLES", "");
+    params.put("BBOX", minX + "," + minY + "," + maxX + "," + maxY);
+    params.put("CRS", "EPSG:3857");
+    params.put("HEIGHT", "256");
+    params.put("WIDTH", "256");
+    params.put("DPI", "96");
     params.put("FORMAT", "image/jpeg");
     return params;
   }
@@ -92,10 +94,11 @@ public class TilesDownloaderService {
   public BufferedImage download(int xTile, int yTile, int zoom, String server, String layer)
       throws IOException, InterruptedException {
     StringBuilder urlBuilder;
+    double[] bbox = xyzToBBoxService.xyzToBBox(xTile, yTile, zoom);
 
     if (GEOSERVER.equals(server)) {
       urlBuilder = new StringBuilder();
-      double[] bbox = xyzToBBoxService.xyzToBBox(xTile, yTile, zoom);
+
       HashMap<String, String> params =
           configureGeoserverParams(layer, bbox[0], bbox[2], bbox[1], bbox[3]);
       urlBuilder.append(GEOSERVER_BASE_URL).append("?");
@@ -109,11 +112,7 @@ public class TilesDownloaderService {
                   .append("&"));
       urlBuilder.setLength(urlBuilder.length() - 1);
     } else {
-      int[] tilColRow = convertTilesCoordinateToTileColTileRow(xTile, yTile, zoom);
-      int tileCol = tilColRow[0];
-      int tileRow = tilColRow[1];
-
-      HashMap<String, String> params = configureIgnParams(tileCol, tileRow, zoom);
+      HashMap<String, String> params = configureIgnParams(bbox[0], bbox[2], bbox[1], bbox[3]);
       urlBuilder = new StringBuilder(IGN_BASE_URL);
       urlBuilder.append("?");
       for (HashMap.Entry<String, String> entry : params.entrySet()) {
