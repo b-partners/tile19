@@ -20,9 +20,6 @@ jobs:
 
     env:
       AWS_REGION: eu-west-3
-      AIRBUS_SEARCHAPI_BASEURL: ${{ secrets.AIRBUS_SEARCHAPI_URL }}
-      AIRBUS_AUTHENTICATION_BASEURL: ${{ secrets.AIRBUS_AUTHENTICATION_BASEURL }}
-      AIRBUS_API_KEY: ${{ secrets.AIRBUS_API_KEY }}
       
 
     steps:
@@ -34,7 +31,8 @@ jobs:
           distribution: 'corretto'
       - run: chmod +x gradlew
       - run: chmod +x .shell/publish_gen_to_maven_local.sh
-      - run: ./gradlew test
+      - run: |
+          ./gradlew test
 
       
 
