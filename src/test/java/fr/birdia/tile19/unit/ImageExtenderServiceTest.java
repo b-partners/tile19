@@ -11,6 +11,7 @@ import fr.birdia.tile19.service.TilesDownloaderService;
 import fr.birdia.tile19.service.TilesMergerService;
 import fr.birdia.tile19.service.XYZToBBOXService;
 import fr.birdia.tile19.service.airbus.AirbusPNEOService;
+import fr.birdia.tile19.validator.ImageValidator;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -26,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 public class ImageExtenderServiceTest {
   XYZToBBOXService xyzToBBOXService = new XYZToBBOXService();
   RestTemplate restTemplate = new RestTemplate();
+  ImageValidator imageValidator = new ImageValidator(restTemplate);
   AirbusPNEOService airbusPNEOService =
       new AirbusPNEOService(
           restTemplate,
@@ -33,12 +35,13 @@ public class ImageExtenderServiceTest {
           System.getenv("AIRBUS_API_KEY"),
           System.getenv("AIRBUS_SEARCHAPI_BASEURL"));
   TilesDownloaderService downloader =
-      new TilesDownloaderService(xyzToBBOXService, airbusPNEOService, restTemplate);
+      new TilesDownloaderService(xyzToBBOXService, airbusPNEOService, restTemplate, imageValidator);
   TilesMergerService merger = new TilesMergerService();
   Workers workers = new Workers();
   ImageDegraderService imageDegrader = new ImageDegraderService();
   ImageExtenderService extender =
-      new ImageExtenderService(downloader, merger, workers, imageDegrader, airbusPNEOService);
+      new ImageExtenderService(
+          downloader, merger, workers, imageDegrader, airbusPNEOService, imageValidator);
 
   @Test
   public void full_herault_image_extension_ok() throws Exception {
