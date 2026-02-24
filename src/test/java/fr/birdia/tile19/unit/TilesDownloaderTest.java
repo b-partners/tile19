@@ -1,10 +1,11 @@
 package fr.birdia.tile19.unit;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import fr.birdia.tile19.service.TilesDownloaderService;
 import fr.birdia.tile19.service.XYZToBBOXService;
 import fr.birdia.tile19.service.airbus.AirbusPNEOService;
+import fr.birdia.tile19.validator.ImageValidator;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -23,8 +24,9 @@ public class TilesDownloaderTest {
           System.getenv("AIRBUS_AUTHENTICATION_BASEURL"),
           System.getenv("AIRBUS_API_KEY"),
           System.getenv("AIRBUS_SEARCHAPI_BASEURL"));
+  ImageValidator imageValidator = new ImageValidator(restTemplate);
   TilesDownloaderService tilesDownloaderService =
-      new TilesDownloaderService(xyzToBBOXService, airbusPNEOService, restTemplate);
+      new TilesDownloaderService(xyzToBBOXService, airbusPNEOService, restTemplate, imageValidator);
 
   @Test
   public void tiles_downloader_geoserver_ok() throws IOException, InterruptedException {

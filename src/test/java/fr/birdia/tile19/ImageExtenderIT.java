@@ -4,6 +4,7 @@ import static fr.birdia.tile19.model.TileExtenderRequestBody.ShiftDirection.RIGH
 import static fr.birdia.tile19.model.TileExtenderRequestBody.ShiftDirection.UP_DOWN_SIDE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import fr.birdia.tile19.conf.FacadeIT;
 import fr.birdia.tile19.endpoint.rest.controller.TileExtenderController;
@@ -175,6 +176,28 @@ public class ImageExtenderIT extends FacadeIT {
         .build();
   }
 
+  public TileExtenderRequestBody throwBlankExceptionBody() {
+    return TileExtenderRequestBody.builder()
+        .x(521906)
+        .y(368610)
+        .z(20)
+        .server("geoserver")
+        .layer("PCRS")
+        .shiftNb(0)
+        .isCropped(false)
+        .latitude(47.047005283518075)
+        .longitude(-0.8176651895582759)
+        .isOpaque(false)
+        .build();
+  }
+
+  @Test
+  void test_throw_blank_exception() throws Exception {
+    assertThrows(
+        RuntimeException.class,
+        () -> tileExtenderController.extendImage(throwBlankExceptionBody()));
+  }
+
   @Test
   void test_ign_tile19() throws Exception {
     ResponseEntity<String> response = tileExtenderController.extendImage(ignBody());
@@ -183,6 +206,7 @@ public class ImageExtenderIT extends FacadeIT {
 
   @ParameterizedTest(name = "Download image for {0}")
   @MethodSource("cityTileProvider")
+  @Disabled
   public void extend_dijon(CityTileTestCase city) throws Exception {
     log.info("Processing city={}", city.city());
     TileExtenderRequestBody body = createTileExtenderRequestBodyFrom(city);

@@ -2,6 +2,7 @@ package fr.birdia.tile19.service;
 
 import fr.birdia.tile19.model.airbus.AirbusProperties;
 import fr.birdia.tile19.service.airbus.AirbusPNEOService;
+import fr.birdia.tile19.validator.ImageValidator;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -35,6 +36,7 @@ public class TilesDownloaderService {
   private final XYZToBBOXService xyzToBBoxService;
   private final AirbusPNEOService airbusPNEOService;
   private RestTemplate restTemplate;
+  private ImageValidator imageValidator;
 
   static double[] tileToLatLon(int x, int y, int zoom) {
     int n = (int) Math.pow(2, zoom);
@@ -141,7 +143,10 @@ public class TilesDownloaderService {
       String contentType = response.headers().firstValue("Content-Type").orElse("");
       if (contentType.startsWith("image")) {
         try (InputStream is = response.body()) {
-          return ImageIO.read(is);
+          BufferedImage img = ImageIO.read(is);
+          log.info("Process image validator");
+          imageValidator.accept(img);
+          return img;
         }
       } else {
         String error = new String(response.body().readAllBytes(), StandardCharsets.UTF_8);

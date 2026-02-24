@@ -5,6 +5,7 @@ import static fr.birdia.tile19.service.TilesDownloaderService.tileToLatLon;
 import fr.birdia.tile19.concurrency.Workers;
 import fr.birdia.tile19.model.airbus.AirbusProperties;
 import fr.birdia.tile19.service.airbus.AirbusPNEOService;
+import fr.birdia.tile19.validator.ImageValidator;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -40,18 +41,21 @@ public class ImageExtenderService {
   private ImageDegraderService imageDegraderService;
   private AirbusPNEOService airbusPNEOService;
   private AirbusProperties airbusProperties;
+  private ImageValidator imageValidator;
 
   public ImageExtenderService(
       TilesDownloaderService downloader,
       TilesMergerService merger,
       Workers workers,
       ImageDegraderService imageDegraderService,
-      AirbusPNEOService airbusPNEOService) {
+      AirbusPNEOService airbusPNEOService,
+      ImageValidator imageValidator) {
     this.tileDownloader = downloader;
     this.tileMerger = merger;
     this.workers = workers;
     this.imageDegraderService = imageDegraderService;
     this.airbusPNEOService = airbusPNEOService;
+    this.imageValidator = imageValidator;
   }
 
   public String getLastUpdatedAtAirbus() {
