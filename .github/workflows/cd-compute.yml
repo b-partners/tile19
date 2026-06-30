@@ -28,7 +28,30 @@ jobs:
 
     env:
       AWS_REGION: eu-west-3
-      
+      AIRBUS_AUTHENTICATION_BASEURL: ${{
+              (github.event_name == 'pull_request' && github.base_ref == 'prod') && secrets.PROD_AIRBUS_AUTHENTICATION_BASEURL ||
+              (github.event_name == 'pull_request' && github.base_ref == 'preprod') && secrets.PREPROD_AIRBUS_AUTHENTICATION_BASEURL ||
+              (github.ref == 'refs/heads/prod') && secrets.PROD_AIRBUS_AUTHENTICATION_BASEURL ||
+              (github.ref == 'refs/heads/preprod') && secrets.PREPROD_AIRBUS_AUTHENTICATION_BASEURL
+              }}
+      AIRBUS_API_KEY: ${{
+              (github.event_name == 'pull_request' && github.base_ref == 'prod') && secrets.PROD_AIRBUS_API_KEY ||
+              (github.event_name == 'pull_request' && github.base_ref == 'preprod') && secrets.PREPROD_AIRBUS_API_KEY ||
+              (github.ref == 'refs/heads/prod') && secrets.PROD_AIRBUS_API_KEY ||
+              (github.ref == 'refs/heads/preprod') && secrets.PREPROD_AIRBUS_API_KEY
+              }}
+      AIRBUS_SEARCHAPI_BASEURL: ${{
+              (github.event_name == 'pull_request' && github.base_ref == 'prod') && secrets.PROD_AIRBUS_SEARCHAPI_BASEURL ||
+              (github.event_name == 'pull_request' && github.base_ref == 'preprod') && secrets.PREPROD_AIRBUS_SEARCHAPI_BASEURL ||
+              (github.ref == 'refs/heads/prod') && secrets.PROD_AIRBUS_SEARCHAPI_BASEURL ||
+              (github.ref == 'refs/heads/preprod') && secrets.PREPROD_AIRBUS_SEARCHAPI_BASEURL
+              }}
+      IMAGE_VALIDATOR_API_URL: ${{
+              (github.event_name == 'pull_request' && github.base_ref == 'prod') && secrets.PROD_IMAGE_VALIDATOR_API_URL ||
+              (github.event_name == 'pull_request' && github.base_ref == 'preprod') && secrets.PREPROD_IMAGE_VALIDATOR_API_URL ||
+              (github.ref == 'refs/heads/prod') && secrets.PROD_IMAGE_VALIDATOR_API_URL ||
+              (github.ref == 'refs/heads/preprod') && secrets.PREPROD_IMAGE_VALIDATOR_API_URL
+              }}
 
     steps:
       - uses: actions/checkout@v4.1.6
