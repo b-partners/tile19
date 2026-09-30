@@ -180,7 +180,7 @@ public class ImageExtenderService {
       }
     }
 
-    workers.invokeAll(callables);
+    workers.apply(callables);
 
     List<List<BufferedImage>> imgGrid =
         Arrays.stream(results).map(Arrays::asList).collect(Collectors.toList());
