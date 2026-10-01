@@ -25,7 +25,7 @@ repositories {
 }
 
 java {
-    group = 'fr.birdia.tile19'
+    group = 'fr.birdia.tileonetonine'
     sourceCompatibility = '21'
     targetCompatibility = '21'
 }
